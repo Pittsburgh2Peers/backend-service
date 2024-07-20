@@ -2,9 +2,9 @@ from flask import Flask, request
 from flask_cors import CORS
 from uuid import uuid4
 from datetime import timedelta, date
-from db import createUser, getToken, isProfileComplete, userTokenValid, deleteAllUsersFromDb, updateUserProfileDetails
+from db import createUser, getToken, isProfileComplete, userTokenValid, deleteAllUsersFromDb, updateUserProfileDetails, makeCarPoolRequest, carPoolRequestExists
 from common import formatResponse, createToken
-from constants import TOKEN_INVALID_ERROR_CODE, TOKEN_INVALID_ERROR_MESSAGE
+from constants import TOKEN_INVALID_ERROR_CODE, TOKEN_INVALID_ERROR_MESSAGE, CAR_POOL_REQUEST_EXISTS_ERROR_CODE, CAR_POOL_REQUEST_EXISTS_ERROR_MESSAGE
 
 app = Flask(__name__)
 
@@ -81,6 +81,31 @@ def updateUserProfile():
     except Exception as e:
         print("Exception ==>", e)
         return formatResponse(False, errorMessage=e)
+
+@app.route("/carPoolRequest", methods=["POST"])
+def carPoolRequest():
+    try:
+        requestBody = request.get_json()
+        emailId = requestBody.get("email")
+        token = requestBody.get("token")
+        if userTokenValid(emailId, token):
+            if not carPoolRequestExists(emailId):
+                date = requestBody.get("date")
+                time = requestBody.get("time")
+                noOfPassengers = requestBody.get("noOfPassengers")
+                noOfTrolleys = requestBody.get("noOfTrolleys")
+                startLocation = requestBody.get("startLocation")
+                endLocation = requestBody.get("endLocation")
+                makeCarPoolRequest(emailId,date,time,noOfPassengers,noOfTrolleys,startLocation,endLocation)
+                return formatResponse(True)
+            else:
+                return formatResponse(True,errorCode=CAR_POOL_REQUEST_EXISTS_ERROR_CODE, errorMessage=CAR_POOL_REQUEST_EXISTS_ERROR_MESSAGE)
+        else:
+            return formatResponse(True,errorCode=TOKEN_INVALID_ERROR_CODE, errorMessage=TOKEN_INVALID_ERROR_MESSAGE)
+    except Exception as e:
+        print("Exception ==>", e)
+        return formatResponse(False, errorMessage=e)
+            
     
 @app.route("/")
 def home():

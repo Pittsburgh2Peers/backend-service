@@ -85,3 +85,22 @@ def updateUserProfileDetails(emailId,name,phoneNo,countryCode):
     databaseConnection.commit()
     databaseConnection.close()
     return
+
+def makeCarPoolRequest(emailId,date,time,noOfPassengers,noOfTrolleys,startLocation,endLocation):
+    databaseConnection = sqlite3.connect(databaseLocation)
+    databaseCursor = databaseConnection.cursor()
+    databaseCursor.execute("INSERT INTO carPoolRequests(emailId,date,time,noOfPassengers,noOfTrolleys,startLocation,endLocation) VALUES(?,?,?,?,?,?,?)",(emailId,date,time,noOfPassengers,noOfTrolleys,startLocation,endLocation))
+    databaseConnection.commit()
+    databaseConnection.close()
+    return
+
+def carPoolRequestExists(emailId):
+    databaseConnection = sqlite3.connect(databaseLocation)
+    databaseCursor = databaseConnection.cursor()
+    userData = databaseCursor.execute("SELECT * FROM carPoolRequests WHERE emailId = ?",(emailId,)).fetchone()
+    if userData is not None:
+        databaseConnection.close()
+        return True
+    else:
+        databaseConnection.close()
+        return False
