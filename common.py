@@ -2,18 +2,22 @@ from flask import jsonify
 from uuid import uuid4
 from datetime import timedelta, date, datetime
 
-errorMessage = {
+errorResponse = {
   "errorCode": "1",
-  "message": "Something went wrong",
+  "errorMessage": "Something went wrong",
 }
-successMessage = {
+successResponse = {
     "errorCode": "0",
     "errorMessage": "OK",
 }
 
-def formatResponse(status, responseKeys):
+def formatResponse(status, responseKeys={}, errorCode=None, errorMessage=None):
     if status:
-        responseKeys.update(successMessage)
+        responseKeys.update(successResponse)
+        if errorCode:
+            responseKeys["errorCode"] = errorCode
+        if errorMessage:
+            responseKeys["errorMessage"] = errorMessage
         response = jsonify(responseKeys)
         response.headers.add('Access-Control-Allow-Methods','*')
         response.headers.add('Access-Control-Expose-Headers',"*")
@@ -22,11 +26,11 @@ def formatResponse(status, responseKeys):
         response.headers.add('Content-Type', '*')
         return response
     else:
-        response = jsonify(errorMessage)
+        response = jsonify(errorResponse)
         response.headers.add('Access-Control-Allow-Methods','*')
         response.headers.add('Access-Control-Expose-Headers',"*")
         response.headers.add('Access-Control-Allow-Headers', '*')
-        response.headers.add('Access-Control-Allow-Origin', 'https://eximplify-develop.vercel.app')
+        response.headers.add('Access-Control-Allow-Origin', '*')
         response.headers.add('Content-Type', '*')
         return response
 
