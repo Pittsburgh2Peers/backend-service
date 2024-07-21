@@ -1,6 +1,7 @@
 import sqlite3
 import os
-from common import createToken, isTokenValid
+from common import createToken, isTokenValid, getTimeFrame
+from constants import CAR_POOL_REQUEST_NOT_FOUND_ERROR_CODE, CAR_POOL_OFFER_MADE_TO_SELF_ERROR_CODE, CAR_POOL_OFFER_ALREADY_EXISTS_ERROR_CODE
 
 THIS_FOLDER = os.path.dirname(os.path.abspath(__file__))
 databaseLocation = os.path.join(THIS_FOLDER, 'database.db')
@@ -104,3 +105,63 @@ def carPoolRequestExists(emailId):
     else:
         databaseConnection.close()
         return False
+    
+def fetchAllCarPoolRequests(startLocation, endLocation, time, timeRange, date, emailId):
+    try:
+        databaseConnection = sqlite3.connect(databaseLocation)
+        databaseCursor = databaseConnection.cursor()
+        lowerLimitTime = "00:00"
+        upperLimitTime = "23:59"
+        if time is not None:
+            lowerLimitTime, upperLimitTime = getTimeFrame(time, timeRange)
+        if endLocation is not None:
+            requestData = databaseCursor.execute("SELECT * FROM carPoolRequests WHERE emailId != ? AND date = ? AND startLocation = ? AND endLocation = ? AND time BETWEEN ? AND ? ",(emailId, date, startLocation, endLocation, lowerLimitTime, upperLimitTime)).fetchall()
+        else:
+            requestData = databaseCursor.execute("SELECT * FROM carPoolRequests WHERE emailId != ? AND date = ? AND startLocation = ? AND time BETWEEN ? AND ?",(emailId, date, startLocation, lowerLimitTime, upperLimitTime)).fetchall()
+        databaseConnection.close()
+        allCarPoolRequests = []
+        for request in requestData:
+            requestDict = {
+                "requestId": str(request[0]),
+                "date": request[2],
+                "time": request[3],
+                "noOfPassengers": request[4],
+                "noOfTrolleys": request[5],
+                "startLocation": request[6],
+                "endLocation": request[7]
+            }
+            allCarPoolRequests.append(requestDict)
+        return allCarPoolRequests
+    except Exception as e:
+        print("Exception ==>", e)
+        return []
+    
+def offerCarPoolRequest(emailId, carPoolId, carType):
+    databaseConnection = sqlite3.connect(databaseLocation)
+    databaseCursor = databaseConnection.cursor()
+    carPoolData = databaseCursor.execute("SELECT * FROM carPoolRequests WHERE requestId = ?",(carPoolId,)).fetchone()
+    if carPoolData is not None:
+        if carPoolData[1] == emailId:
+            databaseConnection.close()
+            return CAR_POOL_OFFER_MADE_TO_SELF_ERROR_CODE
+        else:
+            offerAlreadyExistsData = databaseCursor.execute("SELECT * FROM carPoolOffers WHERE requestId = ? AND emailId = ?",(carPoolId, emailId)).fetchone()
+            if offerAlreadyExistsData is not None:
+                databaseConnection.close()
+                return CAR_POOL_OFFER_ALREADY_EXISTS_ERROR_CODE
+            databaseCursor.execute("INSERT INTO carPoolOffers(emailId,carType, requestId) VALUES(?,?,?)",(emailId, carType, carPoolId))
+            carPoolOfferId = databaseCursor.execute("SELECT seq FROM sqlite_sequence WHERE name = 'carPoolOffers'").fetchone()[0]
+            existingCarPoolOfferIds = databaseCursor.execute("SELECT offerIds FROM carPoolRequests WHERE requestId = ?",(carPoolId,)).fetchone()
+            if existingCarPoolOfferIds is not None and existingCarPoolOfferIds[0] is not None and existingCarPoolOfferIds[0] != "":
+                offerIds = existingCarPoolOfferIds[0]
+                offerIds = offerIds + "," + str(carPoolOfferId)
+                databaseCursor.execute("UPDATE carPoolRequests SET offerIds = ? WHERE requestId = ?", (offerIds, carPoolId))
+                databaseConnection.commit()
+            else:
+                databaseCursor.execute("UPDATE carPoolRequests SET offerIds = ? WHERE requestId = ?", (str(carPoolOfferId), carPoolId))
+                databaseConnection.commit()
+            databaseConnection.close()
+            return True
+    else:
+        databaseConnection.close()
+        return CAR_POOL_REQUEST_NOT_FOUND_ERROR_CODE

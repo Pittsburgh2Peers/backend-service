@@ -39,3 +39,16 @@ def createToken():
 
 def isTokenValid(tokenValidUntil):
     return datetime.strptime(date.today().strftime("%d-%m-%Y"),"%d-%m-%Y") <= datetime.strptime(tokenValidUntil, "%d-%m-%Y")
+
+def getTimeFrame(time, timeRange):
+    try:
+        behindTime = datetime.combine(date.today(), datetime.strptime(time, '%H:%M').time()) - timedelta(hours=timeRange)
+        aheadTime = datetime.combine(date.today(), datetime.strptime(time, '%H:%M').time()) + timedelta(hours=timeRange)
+        today = datetime.today()
+    
+        lowerLimitTime = "00:00" if behindTime.date() < today.date() else behindTime.strftime('%H:%M')
+        upperLimitTime = "23:59" if aheadTime.date() > today.date() else aheadTime.strftime('%H:%M')
+        return lowerLimitTime, upperLimitTime
+    except Exception as e:
+        print("Exception ==>", e)
+        return "00:00", "23:59"
