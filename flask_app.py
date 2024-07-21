@@ -2,7 +2,7 @@ from flask import Flask, request
 from flask_cors import CORS
 from uuid import uuid4
 from datetime import timedelta, date
-from db import createUser, getToken, isProfileComplete, userTokenValid, deleteAllUsersFromDb, updateUserProfileDetails, makeCarPoolRequest, carPoolRequestExists, fetchAllCarPoolRequests, offerCarPoolRequest
+from db import createUser, getToken, isProfileComplete, userTokenValid, deleteAllUsersFromDb, updateUserProfileDetails, makeCarPoolRequest, carPoolRequestExists, fetchAllCarPoolRequests, offerCarPoolRequest, fetchMyCarPoolOffers
 from common import formatResponse, createToken
 from constants import TOKEN_INVALID_ERROR_CODE, TOKEN_INVALID_ERROR_MESSAGE, CAR_POOL_REQUEST_EXISTS_ERROR_CODE, CAR_POOL_REQUEST_EXISTS_ERROR_MESSAGE, CAR_POOL_OFFER_MADE_TO_SELF_ERROR_CODE, CAR_POOL_OFFER_MADE_TO_SELF_ERROR_MESSAGE, CAR_POOL_REQUEST_NOT_FOUND_ERROR_CODE, CAR_POOL_REQUEST_NOT_FOUND_ERROR_MESSAGE, CAR_POOL_OFFER_ALREADY_EXISTS_ERROR_CODE, CAR_POOL_OFFER_ALREADY_EXISTS_ERROR_MESSAGE
 
@@ -64,7 +64,7 @@ def deleteAllUsers():
         print("Exception ==>", e)
         return formatResponse(False, errorMessage=e)
     
-@app.route("/updateUserProfile", methods=["POST, PUT"])
+@app.route("/updateUserProfile", methods=["POST", "PUT"])
 def updateUserProfile():
     try:
         requestBody = request.get_json()
@@ -154,6 +154,23 @@ def offerCarPool():
         print("Exception ==>", e)
         return formatResponse(False, errorMessage=e)
 
+@app.route("/getMyCarPoolOffers", methods=["POST"])
+def getMyCarPoolOffers():
+    try:
+        requestBody = request.get_json()
+        emailId = requestBody.get("email")
+        token = requestBody.get("token")
+        if userTokenValid(emailId, token):
+            carPoolRequestFound, carPoolOffers, pendingRequestDetails = fetchMyCarPoolOffers(emailId)
+            if carPoolRequestFound:
+                return formatResponse(True, {"offers": carPoolOffers, "pendingRequestDetails": pendingRequestDetails })
+            else:
+                return formatResponse(True,errorCode=CAR_POOL_REQUEST_NOT_FOUND_ERROR_CODE, errorMessage=CAR_POOL_REQUEST_NOT_FOUND_ERROR_MESSAGE)
+        else:
+            return formatResponse(True,errorCode=TOKEN_INVALID_ERROR_CODE, errorMessage=TOKEN_INVALID_ERROR_MESSAGE)
+    except Exception as e:
+        print("Exception ==>", e)
+        return formatResponse(False, errorMessage=e)
 
 @app.route("/")
 def home():

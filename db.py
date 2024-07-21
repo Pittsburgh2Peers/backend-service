@@ -165,3 +165,32 @@ def offerCarPoolRequest(emailId, carPoolId, carType):
     else:
         databaseConnection.close()
         return CAR_POOL_REQUEST_NOT_FOUND_ERROR_CODE
+    
+def fetchMyCarPoolOffers(emailId):
+    databaseConnection = sqlite3.connect(databaseLocation)
+    databaseCursor = databaseConnection.cursor()
+    carPoolRequestDetails = databaseCursor.execute("SELECT * FROM carPoolRequests WHERE emailId = ?", (emailId,)).fetchone()
+    if carPoolRequestDetails is None:
+        databaseConnection.close()
+        return False, None, None
+    else:
+        carPoolOffers = databaseCursor.execute("SELECT * FROM carPoolOffers WHERE requestId = ?",(str(carPoolRequestDetails[0]))).fetchall()
+        offers = []
+        for offer in carPoolOffers:
+            offerDict = {
+                "offerId": str(offer[0]),
+                "nameOfPerson": databaseCursor.execute("SELECT name FROM users WHERE emailId = ?", (offer[1],)).fetchone()[0],
+                "carType": offer[2]
+            }
+            offers.append(offerDict)
+        databaseConnection.close()
+        pendingRequestDetails = {
+            "requestId": str(carPoolRequestDetails[0]),
+            "date": carPoolRequestDetails[2],
+            "time": carPoolRequestDetails[3],
+            "noOfPassengers": carPoolRequestDetails[4],
+            "noOfTrolleys": carPoolRequestDetails[5],
+            "startLocation": carPoolRequestDetails[6],
+            "endLocation": carPoolRequestDetails[7]
+        }
+        return True, offers, pendingRequestDetails
