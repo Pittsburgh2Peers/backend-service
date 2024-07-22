@@ -176,7 +176,7 @@ def fetchMyCarPoolOffers(emailId):
         databaseConnection.close()
         return False, None, None
     else:
-        carPoolOffers = databaseCursor.execute("SELECT * FROM carPoolOffers WHERE requestId = ?",(str(carPoolRequestDetails[0]))).fetchall()
+        carPoolOffers = databaseCursor.execute("SELECT * FROM carPoolOffers WHERE requestId = ?",(str(carPoolRequestDetails[0]),)).fetchall()
         offers = []
         for offer in carPoolOffers:
             offerDict = {
@@ -196,3 +196,21 @@ def fetchMyCarPoolOffers(emailId):
             "endLocation": carPoolRequestDetails[7]
         }
         return True, offers, pendingRequestDetails
+    
+def fetchUserDetails(emailId):
+    databaseConnection = sqlite3.connect(databaseLocation)
+    databaseCursor = databaseConnection.cursor()
+    userDetails = databaseCursor.execute("SELECT name,profileImage,verified,accessProvided,phoneNo,countryCode FROM users WHERE emailId = ?", (emailId,)).fetchone()
+    if userDetails is None:
+        databaseConnection.close()
+        return None
+    else:
+        databaseConnection.close()
+        return {
+            "name": userDetails[0],
+            "profileImage": userDetails[1],
+            "verified": True if userDetails[2] == "Y" else False,
+            "accessProvided": True if userDetails[3] == "Y" else False,
+            "phoneNo": userDetails[4],
+            "countryCode": userDetails[5]
+        } 

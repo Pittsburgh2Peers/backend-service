@@ -2,9 +2,9 @@ from flask import Flask, request
 from flask_cors import CORS
 from uuid import uuid4
 from datetime import timedelta, date
-from db import createUser, getToken, isProfileComplete, userTokenValid, deleteAllUsersFromDb, updateUserProfileDetails, makeCarPoolRequest, carPoolRequestExists, fetchAllCarPoolRequests, offerCarPoolRequest, fetchMyCarPoolOffers
+from db import createUser, getToken, isProfileComplete, userTokenValid, deleteAllUsersFromDb, updateUserProfileDetails, makeCarPoolRequest, carPoolRequestExists, fetchAllCarPoolRequests, offerCarPoolRequest, fetchMyCarPoolOffers, fetchUserDetails
 from common import formatResponse, createToken
-from constants import TOKEN_INVALID_ERROR_CODE, TOKEN_INVALID_ERROR_MESSAGE, CAR_POOL_REQUEST_EXISTS_ERROR_CODE, CAR_POOL_REQUEST_EXISTS_ERROR_MESSAGE, CAR_POOL_OFFER_MADE_TO_SELF_ERROR_CODE, CAR_POOL_OFFER_MADE_TO_SELF_ERROR_MESSAGE, CAR_POOL_REQUEST_NOT_FOUND_ERROR_CODE, CAR_POOL_REQUEST_NOT_FOUND_ERROR_MESSAGE, CAR_POOL_OFFER_ALREADY_EXISTS_ERROR_CODE, CAR_POOL_OFFER_ALREADY_EXISTS_ERROR_MESSAGE
+from constants import TOKEN_INVALID_ERROR_CODE, TOKEN_INVALID_ERROR_MESSAGE, CAR_POOL_REQUEST_EXISTS_ERROR_CODE, CAR_POOL_REQUEST_EXISTS_ERROR_MESSAGE, CAR_POOL_OFFER_MADE_TO_SELF_ERROR_CODE, CAR_POOL_OFFER_MADE_TO_SELF_ERROR_MESSAGE, CAR_POOL_REQUEST_NOT_FOUND_ERROR_CODE, CAR_POOL_REQUEST_NOT_FOUND_ERROR_MESSAGE, CAR_POOL_OFFER_ALREADY_EXISTS_ERROR_CODE, CAR_POOL_OFFER_ALREADY_EXISTS_ERROR_MESSAGE, USER_NOT_FOUND_ERROR_CODE, USER_NOT_FOUND_ERROR_MESSAGE
 import re
 app = Flask(__name__)
 
@@ -185,6 +185,24 @@ def getMyCarPoolOffers():
 @app.route("/")
 def home():
     return "<h1 style='margin-top: 20px; text-align: center;'>Pittsburgh 2 Peers is releasing soon!</h1><h4 style='text-align: center;'>The waitlist registration has closed</h4>"
+
+@app.route("/getUserProfileDetails", methods=["POST"])
+def getUserProfileDetails():
+    try:
+        requestBody = request.get_json()
+        emailId = requestBody.get("email")
+        token = requestBody.get("token")
+        if userTokenValid(emailId, token):
+            user = fetchUserDetails(emailId)
+            if user:
+                return formatResponse(True, {"userDetails": user})
+            else:
+                return formatResponse(True,errorCode=USER_NOT_FOUND_ERROR_CODE, errorMessage=USER_NOT_FOUND_ERROR_MESSAGE)
+        else:
+            return formatResponse(True,errorCode=TOKEN_INVALID_ERROR_CODE, errorMessage=TOKEN_INVALID_ERROR_MESSAGE)
+    except Exception as e:
+        print("Exception ==>", e)
+        return formatResponse(False, errorMessage=e)
 
 if __name__ == "__main__":
     app.run(debug=True)
