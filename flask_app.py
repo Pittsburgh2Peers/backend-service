@@ -1,8 +1,8 @@
-from flask import Flask, request
+from flask import Flask, request, render_template
 from flask_cors import CORS
 from uuid import uuid4
 from datetime import timedelta, date
-from db import createUser, getToken, isProfileComplete, userTokenValid, deleteAllUsersFromDb, updateUserProfileDetails, makeCarPoolRequest, carPoolRequestExists, fetchAllCarPoolRequests, offerCarPoolRequest, fetchMyCarPoolOffers, fetchUserDetails
+from db import createUser, getToken, isProfileComplete, userTokenValid, deleteAllUsersFromDb, updateUserProfileDetails, makeCarPoolRequest, carPoolRequestExists, fetchAllCarPoolRequests, offerCarPoolRequest, fetchMyCarPoolOffers, fetchUserDetails, getAllUsers
 from common import formatResponse, createToken
 from constants import TOKEN_INVALID_ERROR_CODE, TOKEN_INVALID_ERROR_MESSAGE, CAR_POOL_REQUEST_EXISTS_ERROR_CODE, CAR_POOL_REQUEST_EXISTS_ERROR_MESSAGE, CAR_POOL_OFFER_MADE_TO_SELF_ERROR_CODE, CAR_POOL_OFFER_MADE_TO_SELF_ERROR_MESSAGE, CAR_POOL_REQUEST_NOT_FOUND_ERROR_CODE, CAR_POOL_REQUEST_NOT_FOUND_ERROR_MESSAGE, CAR_POOL_OFFER_ALREADY_EXISTS_ERROR_CODE, CAR_POOL_OFFER_ALREADY_EXISTS_ERROR_MESSAGE, USER_NOT_FOUND_ERROR_CODE, USER_NOT_FOUND_ERROR_MESSAGE
 import re
@@ -203,6 +203,12 @@ def getUserProfileDetails():
     except Exception as e:
         print("Exception ==>", e)
         return formatResponse(False, errorMessage=e)
+    
+@app.route("/adminDashboard")
+def adminDashboard():
+    # get all users and count
+    userData = getAllUsers()
+    return render_template("adminDashboard.html", userData=userData, userCount = len(userData))
 
 if __name__ == "__main__":
     app.run(debug=True)

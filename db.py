@@ -213,4 +213,12 @@ def fetchUserDetails(emailId):
             "accessProvided": True if userDetails[3] == "Y" else False,
             "phoneNo": userDetails[4],
             "countryCode": userDetails[5]
-        } 
+        }
+        
+def getAllUsers():
+    databaseConnection = sqlite3.connect(databaseLocation)
+    databaseCursor = databaseConnection.cursor()
+    users = databaseCursor.execute("SELECT name FROM users").fetchall()
+    print(users)
+    databaseConnection.close()
+    return users 
