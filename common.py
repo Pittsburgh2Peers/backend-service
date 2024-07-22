@@ -11,6 +11,14 @@ successResponse = {
     "errorMessage": "OK",
 }
 
+def addHeaders(response):
+    response.headers.add('Access-Control-Allow-Methods','*')
+    response.headers.add('Access-Control-Expose-Headers',"*")
+    response.headers.add('Access-Control-Allow-Headers', '*')
+    response.headers.add('Access-Control-Allow-Origin', 'https://pittsburgh2peers.vercel.app')
+    response.headers.add('Content-Type', '*')
+    return response
+
 def formatResponse(status, responseKeys={}, errorCode=None, errorMessage=None):
     if status:
         responseKeys.update(successResponse)
@@ -19,20 +27,10 @@ def formatResponse(status, responseKeys={}, errorCode=None, errorMessage=None):
         if errorMessage:
             responseKeys["errorMessage"] = errorMessage
         response = jsonify(responseKeys)
-        response.headers.add('Access-Control-Allow-Methods','*')
-        response.headers.add('Access-Control-Expose-Headers',"*")
-        response.headers.add('Access-Control-Allow-Headers', '*')
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        response.headers.add('Content-Type', '*')
-        return response
+        return addHeaders(response)
     else:
         response = jsonify(errorResponse)
-        response.headers.add('Access-Control-Allow-Methods','*')
-        response.headers.add('Access-Control-Expose-Headers',"*")
-        response.headers.add('Access-Control-Allow-Headers', '*')
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        response.headers.add('Content-Type', '*')
-        return response
+        return addHeaders(response)
 
 def createToken():
     return str(uuid4()), (date.today() + timedelta(days=10)).strftime("%d-%m-%Y")

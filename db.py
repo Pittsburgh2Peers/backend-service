@@ -221,4 +221,22 @@ def getAllUsers():
     users = databaseCursor.execute("SELECT name FROM users").fetchall()
     print(users)
     databaseConnection.close()
-    return users 
+    return users
+
+def getCarPoolRequests():
+    databaseConnection = sqlite3.connect(databaseLocation)
+    databaseCursor = databaseConnection.cursor()
+    carPoolRequests = databaseCursor.execute("SELECT emailId, date, time, startLocation, endLocation FROM carPoolRequests").fetchall()
+    userData = databaseCursor.execute("SELECT name, emailId FROM users").fetchall()
+    requests = []
+    for carPoolRequest in carPoolRequests:
+        requests.append([
+            next(userDetails for userDetails in userData if userDetails[1] == carPoolRequest[0])[0],
+            carPoolRequest[1],
+            carPoolRequest[2],
+            carPoolRequest[3],
+            carPoolRequest[4]
+        ])
+    print(requests)
+    databaseConnection.close()
+    return requests
