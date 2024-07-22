@@ -2,6 +2,7 @@ import sqlite3
 import os
 from common import createToken, isTokenValid, getTimeFrame
 from constants import CAR_POOL_REQUEST_NOT_FOUND_ERROR_CODE, CAR_POOL_OFFER_MADE_TO_SELF_ERROR_CODE, CAR_POOL_OFFER_ALREADY_EXISTS_ERROR_CODE
+from datetime import datetime
 
 THIS_FOLDER = os.path.dirname(os.path.abspath(__file__))
 databaseLocation = os.path.join(THIS_FOLDER, 'database.db')
@@ -50,9 +51,7 @@ def userTokenValid(emailId, token):
     else:
         databaseConnection.close()
         raise Exception("User does not exist with emailId: " + emailId)
-        
-        
-            
+
 def isProfileComplete(emailId):
     databaseConnection = sqlite3.connect(databaseLocation)
     databaseCursor = databaseConnection.cursor()
@@ -87,10 +86,14 @@ def updateUserProfileDetails(emailId,name,phoneNo,countryCode):
     databaseConnection.close()
     return
 
-def makeCarPoolRequest(emailId,date,time,noOfPassengers,noOfTrolleys,startLocation,endLocation):
+def makeCarPoolRequest(emailId,date,time,noOfPassengers,noOfTrolleys,startLocation,endLocation, newRequest):
+    time = (datetime.strptime(time, '%H:%M').time()).strftime('%H:%M')
     databaseConnection = sqlite3.connect(databaseLocation)
     databaseCursor = databaseConnection.cursor()
-    databaseCursor.execute("INSERT INTO carPoolRequests(emailId,date,time,noOfPassengers,noOfTrolleys,startLocation,endLocation) VALUES(?,?,?,?,?,?,?)",(emailId,date,time,noOfPassengers,noOfTrolleys,startLocation,endLocation))
+    if newRequest:
+        databaseCursor.execute("INSERT INTO carPoolRequests(emailId,date,time,noOfPassengers,noOfTrolleys,startLocation,endLocation) VALUES(?,?,?,?,?,?,?)",(emailId,date,time,noOfPassengers,noOfTrolleys,startLocation,endLocation))
+    else:
+        databaseCursor.execute("UPDATE carPoolRequests SET date = ?, time = ?, noOfPassengers = ?, noOfTrolleys = ?, startLocation = ?, endLocation = ? WHERE emailId = ?",(date,time,noOfPassengers,noOfTrolleys,startLocation,endLocation,emailId))
     databaseConnection.commit()
     databaseConnection.close()
     return
@@ -107,34 +110,33 @@ def carPoolRequestExists(emailId):
         return False
     
 def fetchAllCarPoolRequests(startLocation, endLocation, time, timeRange, date, emailId):
-    try:
-        databaseConnection = sqlite3.connect(databaseLocation)
-        databaseCursor = databaseConnection.cursor()
-        lowerLimitTime = "00:00"
-        upperLimitTime = "23:59"
-        if time is not None:
-            lowerLimitTime, upperLimitTime = getTimeFrame(time, timeRange)
-        if endLocation is not None:
-            requestData = databaseCursor.execute("SELECT * FROM carPoolRequests WHERE emailId != ? AND date = ? AND startLocation = ? AND endLocation = ? AND time BETWEEN ? AND ? ",(emailId, date, startLocation, endLocation, lowerLimitTime, upperLimitTime)).fetchall()
-        else:
-            requestData = databaseCursor.execute("SELECT * FROM carPoolRequests WHERE emailId != ? AND date = ? AND startLocation = ? AND time BETWEEN ? AND ?",(emailId, date, startLocation, lowerLimitTime, upperLimitTime)).fetchall()
-        databaseConnection.close()
-        allCarPoolRequests = []
-        for request in requestData:
-            requestDict = {
-                "requestId": str(request[0]),
-                "date": request[2],
-                "time": request[3],
-                "noOfPassengers": request[4],
-                "noOfTrolleys": request[5],
-                "startLocation": request[6],
-                "endLocation": request[7]
-            }
-            allCarPoolRequests.append(requestDict)
-        return allCarPoolRequests
-    except Exception as e:
-        print("Exception ==>", e)
-        return []
+    databaseConnection = sqlite3.connect(databaseLocation)
+    databaseCursor = databaseConnection.cursor()
+    lowerLimitTime = "00:00"
+    upperLimitTime = "23:59"
+    if time is not None:
+        lowerLimitTime, upperLimitTime = getTimeFrame(time, timeRange)
+    if endLocation is not None:
+        requestData = databaseCursor.execute("SELECT * FROM carPoolRequests WHERE emailId != ? AND date = ? AND startLocation = ? AND endLocation = ? AND time BETWEEN ? AND ? ",(emailId, date, startLocation, endLocation, lowerLimitTime, upperLimitTime)).fetchall()
+    else:
+        requestData = databaseCursor.execute("SELECT * FROM carPoolRequests WHERE emailId != ? AND date = ? AND startLocation = ? AND time BETWEEN ? AND ?",(emailId, date, startLocation, lowerLimitTime, upperLimitTime)).fetchall()
+    allCarPoolRequests = []
+    for request in requestData:
+        userDetails = databaseCursor.execute("SELECT countryCode,phoneNo,name FROM users WHERE emailId = ?", (request[1],)).fetchone()
+        requestDict = {
+            "requestId": str(request[0]),
+            "date": request[2],
+            "time": request[3],
+            "noOfPassengers": request[4],
+            "noOfTrolleys": request[5],
+            "startLocation": request[6],
+            "endLocation": request[7],
+            "phoneNo": userDetails[0] + userDetails[1],
+            "name" : userDetails[2]
+        }
+        allCarPoolRequests.append(requestDict)
+    databaseConnection.close()
+    return allCarPoolRequests
     
 def offerCarPoolRequest(emailId, carPoolId, carType):
     databaseConnection = sqlite3.connect(databaseLocation)

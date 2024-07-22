@@ -5,7 +5,7 @@ from datetime import timedelta, date
 from db import createUser, getToken, isProfileComplete, userTokenValid, deleteAllUsersFromDb, updateUserProfileDetails, makeCarPoolRequest, carPoolRequestExists, fetchAllCarPoolRequests, offerCarPoolRequest, fetchMyCarPoolOffers
 from common import formatResponse, createToken
 from constants import TOKEN_INVALID_ERROR_CODE, TOKEN_INVALID_ERROR_MESSAGE, CAR_POOL_REQUEST_EXISTS_ERROR_CODE, CAR_POOL_REQUEST_EXISTS_ERROR_MESSAGE, CAR_POOL_OFFER_MADE_TO_SELF_ERROR_CODE, CAR_POOL_OFFER_MADE_TO_SELF_ERROR_MESSAGE, CAR_POOL_REQUEST_NOT_FOUND_ERROR_CODE, CAR_POOL_REQUEST_NOT_FOUND_ERROR_MESSAGE, CAR_POOL_OFFER_ALREADY_EXISTS_ERROR_CODE, CAR_POOL_OFFER_ALREADY_EXISTS_ERROR_MESSAGE
-
+import re
 app = Flask(__name__)
 
 CORS(app)
@@ -37,7 +37,7 @@ def generateToken():
         return formatResponse(True, data)
     except Exception as e:
         print("Exception ==>", e)
-        return formatResponse(True, errorMessage=str(e))
+        return formatResponse(False, errorMessage=str(e))
     
 @app.route("/userProfileComplete", methods=["POST"])
 def userProfileComplete():
@@ -73,6 +73,9 @@ def updateUserProfile():
         if userTokenValid(emailId, token):
             name = requestBody.get("name")
             phoneNo = requestBody.get("phoneNo")
+            if phoneNo:
+                # remove all spaces
+                phoneNo = re.sub(" ", "", phoneNo)
             countryCode = requestBody.get("countryCode")
             updateUserProfileDetails(emailId,name,phoneNo,countryCode)
             return formatResponse(True)
@@ -96,10 +99,17 @@ def carPoolRequest():
                 noOfTrolleys = requestBody.get("noOfTrolleys")
                 startLocation = requestBody.get("startLocation")
                 endLocation = requestBody.get("endLocation")
-                makeCarPoolRequest(emailId,date,time,noOfPassengers,noOfTrolleys,startLocation,endLocation)
+                makeCarPoolRequest(emailId,date,time,noOfPassengers,noOfTrolleys,startLocation,endLocation, True)
                 return formatResponse(True)
             else:
-                return formatResponse(True,errorCode=CAR_POOL_REQUEST_EXISTS_ERROR_CODE, errorMessage=CAR_POOL_REQUEST_EXISTS_ERROR_MESSAGE)
+                date = requestBody.get("date")
+                time = requestBody.get("time")
+                noOfPassengers = requestBody.get("noOfPassengers")
+                noOfTrolleys = requestBody.get("noOfTrolleys")
+                startLocation = requestBody.get("startLocation")
+                endLocation = requestBody.get("endLocation")
+                makeCarPoolRequest(emailId,date,time,noOfPassengers,noOfTrolleys,startLocation,endLocation, False)
+                return formatResponse(True)
         else:
             return formatResponse(True,errorCode=TOKEN_INVALID_ERROR_CODE, errorMessage=TOKEN_INVALID_ERROR_MESSAGE)
     except Exception as e:
