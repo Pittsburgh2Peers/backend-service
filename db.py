@@ -219,7 +219,6 @@ def getAllUsers():
     databaseConnection = sqlite3.connect(databaseLocation)
     databaseCursor = databaseConnection.cursor()
     users = databaseCursor.execute("SELECT name FROM users").fetchall()
-    print(users)
     databaseConnection.close()
     return users
 
@@ -229,7 +228,15 @@ def getCarPoolRequests():
     carPoolRequests = databaseCursor.execute("SELECT emailId, date, time, startLocation, endLocation FROM carPoolRequests").fetchall()
     userData = databaseCursor.execute("SELECT name, emailId FROM users").fetchall()
     requests = []
-    for carPoolRequest in carPoolRequests:
+    # extract all unique dates from carPoolRequests by converting into set
+    sortedRequests = []
+    uniqueDates = list(set([request[1] for request in carPoolRequests]))
+    uniqueDates.sort(key=lambda date: datetime.strptime(date, "%d-%m-%Y"))
+    for date in uniqueDates:
+        allSlotsInDate = list(filter(lambda request: request[1] == date, carPoolRequests))
+        allSlotsInDate.sort(key=lambda slot: datetime.strptime(slot[2], '%H:%M'))
+        sortedRequests.extend(allSlotsInDate)
+    for carPoolRequest in sortedRequests:
         requests.append([
             next(userDetails for userDetails in userData if userDetails[1] == carPoolRequest[0])[0],
             carPoolRequest[1],
@@ -237,6 +244,5 @@ def getCarPoolRequests():
             carPoolRequest[3],
             carPoolRequest[4]
         ])
-    print(requests)
     databaseConnection.close()
     return requests
