@@ -6,6 +6,7 @@ from db import createUser, getToken, isProfileComplete, userTokenValid, deleteAl
 from common import formatResponse, createToken
 from constants import TOKEN_INVALID_ERROR_CODE, TOKEN_INVALID_ERROR_MESSAGE, CAR_POOL_REQUEST_EXISTS_ERROR_CODE, CAR_POOL_REQUEST_EXISTS_ERROR_MESSAGE, CAR_POOL_OFFER_MADE_TO_SELF_ERROR_CODE, CAR_POOL_OFFER_MADE_TO_SELF_ERROR_MESSAGE, CAR_POOL_REQUEST_NOT_FOUND_ERROR_CODE, CAR_POOL_REQUEST_NOT_FOUND_ERROR_MESSAGE, CAR_POOL_OFFER_ALREADY_EXISTS_ERROR_CODE, CAR_POOL_OFFER_ALREADY_EXISTS_ERROR_MESSAGE, USER_NOT_FOUND_ERROR_CODE, USER_NOT_FOUND_ERROR_MESSAGE
 import re
+import logging
 app = Flask(__name__)
 
 CORS(app)
@@ -24,7 +25,7 @@ def registrationSuccess():
         createUser(name, emailId, profileImage, countryCode, phoneNo, userToken, tokenValidUntil)
         return formatResponse(True, data)
     except Exception as e:
-        print("Exception ==>", e)
+        logger.error("Exception ==>"+ str(e))
         return formatResponse(False, errorMessage=e)
     
 @app.route("/generateToken", methods=["POST"])
@@ -36,7 +37,7 @@ def generateToken():
         data = { "token": token }
         return formatResponse(True, data)
     except Exception as e:
-        print("Exception ==>", e)
+        logger.error("Exception ==>"+ str(e))
         return formatResponse(False, errorMessage=str(e))
     
 @app.route("/userProfileComplete", methods=["POST"])
@@ -52,7 +53,7 @@ def userProfileComplete():
         else:
             return formatResponse(True,errorCode=TOKEN_INVALID_ERROR_CODE, errorMessage=TOKEN_INVALID_ERROR_MESSAGE)
     except Exception as e:
-        print("Exception ==>", e)
+        logger.error("Exception ==>"+ str(e))
         return formatResponse(False, errorMessage=e)
     
 @app.route("/deleteAllUsers")
@@ -61,7 +62,7 @@ def deleteAllUsers():
         deleteAllUsersFromDb()
         return formatResponse(True)
     except Exception as e:
-        print("Exception ==>", e)
+        logger.error("Exception ==>"+ str(e))
         return formatResponse(False, errorMessage=e)
     
 @app.route("/updateUserProfile", methods=["POST", "PUT"])
@@ -82,7 +83,7 @@ def updateUserProfile():
         else:
             return formatResponse(True,errorCode=TOKEN_INVALID_ERROR_CODE, errorMessage=TOKEN_INVALID_ERROR_MESSAGE)
     except Exception as e:
-        print("Exception ==>", e)
+        logger.error("Exception ==>"+ str(e))
         return formatResponse(False, errorMessage=e)
 
 @app.route("/carPoolRequest", methods=["POST", "PUT"])
@@ -113,7 +114,7 @@ def carPoolRequest():
         else:
             return formatResponse(True,errorCode=TOKEN_INVALID_ERROR_CODE, errorMessage=TOKEN_INVALID_ERROR_MESSAGE)
     except Exception as e:
-        print("Exception ==>", e)
+        logger.error("Exception ==>"+ str(e))
         return formatResponse(False, errorMessage=e)
             
 @app.route("/getAllCarPoolRequests", methods=["POST"])
@@ -134,7 +135,7 @@ def getAllCarPoolRequests():
         else:
             return formatResponse(True,errorCode=TOKEN_INVALID_ERROR_CODE, errorMessage=TOKEN_INVALID_ERROR_MESSAGE)
     except Exception as e:
-        print("Exception ==>", e)
+        logger.error("Exception ==>"+ str(e))
         return formatResponse(False, errorMessage=e)
 
 @app.route("/offerCarPool", methods=["POST"])
@@ -161,7 +162,7 @@ def offerCarPool():
         else:
             return formatResponse(True,errorCode=TOKEN_INVALID_ERROR_CODE, errorMessage=TOKEN_INVALID_ERROR_MESSAGE)
     except Exception as e:
-        print("Exception ==>", e)
+        logger.error("Exception ==>"+ str(e))
         return formatResponse(False, errorMessage=e)
 
 @app.route("/getMyCarPoolOffers", methods=["POST"])
@@ -179,7 +180,7 @@ def getMyCarPoolOffers():
         else:
             return formatResponse(True,errorCode=TOKEN_INVALID_ERROR_CODE, errorMessage=TOKEN_INVALID_ERROR_MESSAGE)
     except Exception as e:
-        print("Exception ==>", e)
+        logger.error("Exception ==>"+ str(e))
         return formatResponse(False, errorMessage=e)
 
 @app.route("/")
@@ -201,7 +202,7 @@ def getUserProfileDetails():
         else:
             return formatResponse(True,errorCode=TOKEN_INVALID_ERROR_CODE, errorMessage=TOKEN_INVALID_ERROR_MESSAGE)
     except Exception as e:
-        print("Exception ==>", e)
+        logger.error("Exception ==>"+ str(e))
         return formatResponse(False, errorMessage=e)
     
 @app.route("/adminDashboard")

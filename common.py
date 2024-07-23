@@ -48,5 +48,5 @@ def getTimeFrame(time, timeRange):
         upperLimitTime = "23:59" if aheadTime.date() > today.date() else aheadTime.strftime('%H:%M')
         return lowerLimitTime, upperLimitTime
     except Exception as e:
-        print("Exception ==>", e)
+        logger.error("Exception ==>"+ str(e))
         return "00:00", "23:59"
