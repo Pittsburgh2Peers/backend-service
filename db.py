@@ -269,4 +269,3 @@ def makeUHualRequest(emailId,date,time,canDrive,startLocation,endLocation, newRe
     databaseConnection.commit()
     databaseConnection.close()
     return
-    

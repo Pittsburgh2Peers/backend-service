@@ -222,19 +222,7 @@ def getFlags():
     except Exception as e:
         logger.error("Exception ==>"+ str(e))
         return formatResponse(False, errorMessage=e)
-    
-'''
-REQUEST BODY:
-{
-    ""token"": ""token_passed_in_first_api"",
-    ""email"": ""asankar2@andrew.cmu.edu"",
-    ""date"": ""30-12-2024"",
-    ""time"": ""12:00"",
-    ""canDrive"": true/false,
-    ""startLocation"": ""Giant Eagle"", // nullable
-    ""endLocation"": ""Bartlett Street"" // nullable
-}
-'''
+
 @app.route("/uHaulRequest", methods=["POST"])
 def uHaulRequest():
     try:
