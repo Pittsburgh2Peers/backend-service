@@ -102,12 +102,8 @@ def carPoolRequestExists(emailId):
     databaseConnection = sqlite3.connect(databaseLocation)
     databaseCursor = databaseConnection.cursor()
     userData = databaseCursor.execute("SELECT * FROM carPoolRequests WHERE emailId = ?",(emailId,)).fetchone()
-    if userData is not None:
-        databaseConnection.close()
-        return True
-    else:
-        databaseConnection.close()
-        return False
+    databaseConnection.close()
+    return True if userData is not None else False
     
 def fetchAllCarPoolRequests(startLocation, endLocation, time, timeRange, date, emailId):
     databaseConnection = sqlite3.connect(databaseLocation)
@@ -246,3 +242,18 @@ def getCarPoolRequests():
         ])
     databaseConnection.close()
     return requests
+
+def uHualRequestExists(emailId):
+    databaseConnection = sqlite3.connect(databaseLocation)
+    databaseCursor = databaseConnection.cursor()
+    userData = databaseCursor.execute("SELECT * FROM uHualRequests WHERE emailId = ?",(emailId,)).fetchone()
+    databaseConnection.close()
+    return True if userData is not None else False
+    
+def fetchUserFlags(emailId):
+    databaseConnection = sqlite3.connect(databaseLocation)
+    databaseCursor = databaseConnection.cursor()
+    carPoolExists  = carPoolRequestExists(emailId)
+    uHualExists = uHualRequestExists(emailId)
+    databaseConnection.close()
+    return {"carPoolRequested" : carPoolExists, "uHualRequested": uHualExists}
