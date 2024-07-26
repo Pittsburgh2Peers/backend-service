@@ -269,3 +269,25 @@ def makeUHualRequest(emailId,date,time,canDrive,startLocation,endLocation, newRe
     databaseConnection.commit()
     databaseConnection.close()
     return
+
+def fetchAllUHualRequests(dayRange, date, emailId):
+    databaseConnection = sqlite3.connect(databaseLocation)
+    databaseCursor = databaseConnection.cursor()
+    lowerLimitDate, upperLimitDate = getDayFrame(date, dayRange)
+    requestData = databaseCursor.execute("SELECT requestId,date,time,startLocation,endLocation,canDrive,emailId FROM uHualRequests WHERE emailId != ? date BETWEEN ? AND ?", (emailId,lowerLimitDate, upperLimitDate)).fetchall()
+    allUHualRequests = []
+    for request in requestData:
+        userDetails = databaseCursor.execute("SELECT countryCode,phoneNo,name FROM users WHERE emailId = ?", (request[6],)).fetchone()
+        requestDict = {
+            "requestId": request[0],
+            "date": request[1],
+            "time": request[2],
+            "startLocation": request[3],
+            "endLocation": request[4],
+            "personWillingtoDrive”": True if request[5] == 'Y' else False,
+            "phoneNo": userDetails[0] + userDetails[1],
+            "name" : userDetails[2]
+        }
+        allUHualRequests.append(requestDict)
+    databaseConnection.close()
+    return allUHualRequests
