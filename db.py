@@ -257,3 +257,16 @@ def fetchUserFlags(emailId):
     uHualExists = uHualRequestExists(emailId)
     databaseConnection.close()
     return {"carPoolRequested" : carPoolExists, "uHualRequested": uHualExists}
+
+def makeUHualRequest(emailId,date,time,canDrive,startLocation,endLocation, newRequest):
+    time = (datetime.strptime(time, '%H:%M').time()).strftime('%H:%M')
+    databaseConnection = sqlite3.connect(databaseLocation)
+    databaseCursor = databaseConnection.cursor()
+    if newRequest:
+        databaseCursor.execute("INSERT INTO uHualRequests(emailId,date,time,canDrive,startLocation,endLocation) VALUES(?,?,?,?,?,?)",(emailId,date,time,'Y' if canDrive else 'N',startLocation,endLocation))
+    else:
+        databaseCursor.execute("UPDATE carPoolRequests SET date = ?, time = ?, canDrive = ?, startLocation = ?, endLocation = ? WHERE emailId = ?",(date,time,'Y' if canDrive else 'N',startLocation,endLocation,emailId))
+    databaseConnection.commit()
+    databaseConnection.close()
+    return
+    

@@ -2,7 +2,7 @@ from flask import Flask, request, render_template
 from flask_cors import CORS
 from uuid import uuid4
 from datetime import timedelta, date
-from db import createUser, getToken, isProfileComplete, userTokenValid, deleteAllUsersFromDb, updateUserProfileDetails, makeCarPoolRequest, carPoolRequestExists, fetchAllCarPoolRequests, offerCarPoolRequest, fetchMyCarPoolOffers, fetchUserDetails, getAllUsers, getCarPoolRequests, fetchUserFlags
+from db import createUser, getToken, isProfileComplete, userTokenValid, deleteAllUsersFromDb, updateUserProfileDetails, makeCarPoolRequest, carPoolRequestExists, fetchAllCarPoolRequests, offerCarPoolRequest, fetchMyCarPoolOffers, fetchUserDetails, getAllUsers, getCarPoolRequests, fetchUserFlags, uHualRequestExists, makeUHualRequest
 from common import formatResponse, createToken
 from constants import TOKEN_INVALID_ERROR_CODE, TOKEN_INVALID_ERROR_MESSAGE, CAR_POOL_REQUEST_EXISTS_ERROR_CODE, CAR_POOL_REQUEST_EXISTS_ERROR_MESSAGE, CAR_POOL_OFFER_MADE_TO_SELF_ERROR_CODE, CAR_POOL_OFFER_MADE_TO_SELF_ERROR_MESSAGE, CAR_POOL_REQUEST_NOT_FOUND_ERROR_CODE, CAR_POOL_REQUEST_NOT_FOUND_ERROR_MESSAGE, CAR_POOL_OFFER_ALREADY_EXISTS_ERROR_CODE, CAR_POOL_OFFER_ALREADY_EXISTS_ERROR_MESSAGE, USER_NOT_FOUND_ERROR_CODE, USER_NOT_FOUND_ERROR_MESSAGE
 import re
@@ -95,22 +95,16 @@ def carPoolRequest():
         emailId = requestBody.get("email")
         token = requestBody.get("token")
         if userTokenValid(emailId, token):
+            date = requestBody.get("date")
+            time = requestBody.get("time")
+            noOfPassengers = requestBody.get("noOfPassengers")
+            noOfTrolleys = requestBody.get("noOfTrolleys")
+            startLocation = requestBody.get("startLocation")
+            endLocation = requestBody.get("endLocation")
             if not carPoolRequestExists(emailId):
-                date = requestBody.get("date")
-                time = requestBody.get("time")
-                noOfPassengers = requestBody.get("noOfPassengers")
-                noOfTrolleys = requestBody.get("noOfTrolleys")
-                startLocation = requestBody.get("startLocation")
-                endLocation = requestBody.get("endLocation")
                 makeCarPoolRequest(emailId,date,time,noOfPassengers,noOfTrolleys,startLocation,endLocation, True)
                 return formatResponse(True)
             else:
-                date = requestBody.get("date")
-                time = requestBody.get("time")
-                noOfPassengers = requestBody.get("noOfPassengers")
-                noOfTrolleys = requestBody.get("noOfTrolleys")
-                startLocation = requestBody.get("startLocation")
-                endLocation = requestBody.get("endLocation")
                 makeCarPoolRequest(emailId,date,time,noOfPassengers,noOfTrolleys,startLocation,endLocation, False)
                 return formatResponse(True)
         else:
@@ -228,6 +222,44 @@ def getFlags():
     except Exception as e:
         logger.error("Exception ==>"+ str(e))
         return formatResponse(False, errorMessage=e)
+    
+'''
+REQUEST BODY:
+{
+    ""token"": ""token_passed_in_first_api"",
+    ""email"": ""asankar2@andrew.cmu.edu"",
+    ""date"": ""30-12-2024"",
+    ""time"": ""12:00"",
+    ""canDrive"": true/false,
+    ""startLocation"": ""Giant Eagle"", // nullable
+    ""endLocation"": ""Bartlett Street"" // nullable
+}
+'''
+@app.route("/uHaulRequest", methods=["POST"])
+def uHaulRequest():
+    try:
+        requestBody = request.get_json()
+        emailId = requestBody.get("email")
+        token = requestBody.get("token")
+        if userTokenValid(emailId, token):
+            date = requestBody.get("date")
+            time = requestBody.get("time")
+            canDrive = requestBody.get("canDrive")
+            startLocation = requestBody.get("startLocation")
+            endLocation = requestBody.get("endLocation")
+            if not uHualRequestExists(emailId):
+                makeUHualRequest(emailId,date,time,canDrive,startLocation,endLocation, True)
+                return formatResponse(True)
+            else:
+                makeUHualRequest(emailId,date,time,canDrive,startLocation,endLocation, False)
+                return formatResponse(True)
+        else:
+            return formatResponse(True,errorCode=TOKEN_INVALID_ERROR_CODE, errorMessage=TOKEN_INVALID_ERROR_MESSAGE)
+    except Exception as e:
+        logger.error("Exception ==>"+ str(e))
+        return formatResponse(False, errorMessage=e)
+
+            
 
 if __name__ == "__main__":
     app.run(debug=True)
