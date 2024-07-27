@@ -279,7 +279,7 @@ def fetchAllUHualRequests(dayRange, date, emailId):
     for request in requestData:
         userDetails = databaseCursor.execute("SELECT countryCode,phoneNo,name FROM users WHERE emailId = ?", (request[6],)).fetchone()
         requestDict = {
-            "requestId": request[0],
+            "requestId": str(request[0]),
             "date": request[1],
             "time": request[2],
             "startLocation": request[3],
@@ -291,3 +291,23 @@ def fetchAllUHualRequests(dayRange, date, emailId):
         allUHualRequests.append(requestDict)
     databaseConnection.close()
     return allUHualRequests
+
+def fetchMyUHualOffers():
+    databaseConnection = sqlite3.connect(databaseLocation)
+    databaseCursor = databaseConnection.cursor()
+    uHualRequestDetails = databaseCursor.execute("SELECT * FROM uHualRequests WHERE emailId = ?", (emailId,)).fetchone()
+    if uHualRequestDetails is None:
+        databaseConnection.close()
+        return False, None, None
+    else:
+        offers = []
+        databaseConnection.close()
+        pendingRequestDetails = {
+            "requestId": str(uHualRequestDetails[0]),
+            "date": uHualRequestDetails[2],
+            "time": uHualRequestDetails[3],
+            "startLocation": uHualRequestDetails[5],
+            "endLocation": uHualRequestDetails[6],
+            "personWillingToDrive”": True if uHualRequestDetails[4] == 'Y' else False
+        }
+        return True, offers, pendingRequestDetails

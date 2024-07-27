@@ -2,9 +2,9 @@ from flask import Flask, request, render_template
 from flask_cors import CORS
 from uuid import uuid4
 from datetime import timedelta, date
-from db import createUser, getToken, isProfileComplete, userTokenValid, deleteAllUsersFromDb, updateUserProfileDetails, makeCarPoolRequest, carPoolRequestExists, fetchAllCarPoolRequests, offerCarPoolRequest, fetchMyCarPoolOffers, fetchUserDetails, getAllUsers, getCarPoolRequests, fetchUserFlags, uHualRequestExists, makeUHualRequest, fetchAllUHualRequests
+from db import createUser, getToken, isProfileComplete, userTokenValid, deleteAllUsersFromDb, updateUserProfileDetails, makeCarPoolRequest, carPoolRequestExists, fetchAllCarPoolRequests, offerCarPoolRequest, fetchMyCarPoolOffers, fetchUserDetails, getAllUsers, getCarPoolRequests, fetchUserFlags, uHualRequestExists, makeUHualRequest, fetchAllUHualRequests, fetchMyUHualOffers
 from common import formatResponse, createToken
-from constants import TOKEN_INVALID_ERROR_CODE, TOKEN_INVALID_ERROR_MESSAGE, CAR_POOL_REQUEST_EXISTS_ERROR_CODE, CAR_POOL_REQUEST_EXISTS_ERROR_MESSAGE, CAR_POOL_OFFER_MADE_TO_SELF_ERROR_CODE, CAR_POOL_OFFER_MADE_TO_SELF_ERROR_MESSAGE, CAR_POOL_REQUEST_NOT_FOUND_ERROR_CODE, CAR_POOL_REQUEST_NOT_FOUND_ERROR_MESSAGE, CAR_POOL_OFFER_ALREADY_EXISTS_ERROR_CODE, CAR_POOL_OFFER_ALREADY_EXISTS_ERROR_MESSAGE, USER_NOT_FOUND_ERROR_CODE, USER_NOT_FOUND_ERROR_MESSAGE
+from constants import TOKEN_INVALID_ERROR_CODE, TOKEN_INVALID_ERROR_MESSAGE, CAR_POOL_REQUEST_EXISTS_ERROR_CODE, CAR_POOL_REQUEST_EXISTS_ERROR_MESSAGE, CAR_POOL_OFFER_MADE_TO_SELF_ERROR_CODE, CAR_POOL_OFFER_MADE_TO_SELF_ERROR_MESSAGE, CAR_POOL_REQUEST_NOT_FOUND_ERROR_CODE, CAR_POOL_REQUEST_NOT_FOUND_ERROR_MESSAGE, CAR_POOL_OFFER_ALREADY_EXISTS_ERROR_CODE, CAR_POOL_OFFER_ALREADY_EXISTS_ERROR_MESSAGE, USER_NOT_FOUND_ERROR_CODE, USER_NOT_FOUND_ERROR_MESSAGE, U_HAUL_REQUEST_NOT_FOUND_ERROR_CODE, U_HAUL_REQUEST_NOT_FOUND_ERROR_MESSAGE
 import re
 import logging
 app = Flask(__name__)
@@ -259,6 +259,24 @@ def getAllUHualRequests():
             timeRange = 2 if not dayRangeStr else int(dayRangeStr)
             uHaulRequests = fetchAllUHualRequests(dayRange, date, emailId)
             return formatResponse(True, {"data": uHaulRequests})
+        else:
+            return formatResponse(True,errorCode=TOKEN_INVALID_ERROR_CODE, errorMessage=TOKEN_INVALID_ERROR_MESSAGE)
+    except Exception as e:
+        logger.error("Exception ==>"+ str(e))
+        return formatResponse(False, errorMessage=e)
+    
+@app.route("/getMyUHualOffers", methods=["POST"])
+def getMyUHualOffers():
+    try:
+        requestBody = request.get_json()
+        emailId = requestBody.get("email")
+        token = requestBody.get("token")
+        if userTokenValid(emailId, token):
+            uHaulRequestFound, uHaulOffers, pendingRequestDetails = fetchMyUHualOffers(emailId)
+            if uHaulRequestFound:
+                return formatResponse(True, {"offers": uHaulOffers, "pendingRequestDetails": pendingRequestDetails })
+            else:
+                return formatResponse(True,errorCode=U_HAUL_REQUEST_NOT_FOUND_ERROR_CODE, errorMessage=U_HAUL_REQUEST_NOT_FOUND_ERROR_MESSAGE) 
         else:
             return formatResponse(True,errorCode=TOKEN_INVALID_ERROR_CODE, errorMessage=TOKEN_INVALID_ERROR_MESSAGE)
     except Exception as e:
