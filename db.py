@@ -1,6 +1,6 @@
 import sqlite3
 import os
-from common import createToken, isTokenValid, getTimeFrame
+from common import createToken, isTokenValid, getTimeFrame, getDayFrame
 from constants import CAR_POOL_REQUEST_NOT_FOUND_ERROR_CODE, CAR_POOL_OFFER_MADE_TO_SELF_ERROR_CODE, CAR_POOL_OFFER_ALREADY_EXISTS_ERROR_CODE
 from datetime import datetime
 
@@ -260,12 +260,13 @@ def fetchUserFlags(emailId):
 
 def makeUHaulRequest(emailId,date,time,canDrive,startLocation,endLocation, newRequest):
     time = (datetime.strptime(time, '%H:%M').time()).strftime('%H:%M')
+    date = (datetime.strptime(date, '%d-%m-%Y').date()).strftime('%Y-%m-%d')
     databaseConnection = sqlite3.connect(databaseLocation)
     databaseCursor = databaseConnection.cursor()
     if newRequest:
-        databaseCursor.execute("INSERT INTO uHaulRequests(emailId,date,time,canDrive,startLocation,endLocation) VALUES(?,?,?,?,?,?)",(emailId,date,time,'Y' if canDrive else 'N',startLocation,endLocation))
+        databaseCursor.execute("INSERT INTO uHaulRequests(emailId,requestDate,time,canDrive,startLocation,endLocation) VALUES(?,?,?,?,?,?)",(emailId,date,time,'Y' if canDrive else 'N',startLocation,endLocation))
     else:
-        databaseCursor.execute("UPDATE carPoolRequests SET date = ?, time = ?, canDrive = ?, startLocation = ?, endLocation = ? WHERE emailId = ?",(date,time,'Y' if canDrive else 'N',startLocation,endLocation,emailId))
+        databaseCursor.execute("UPDATE uHaulRequests SET requestDate = ?, time = ?, canDrive = ?, startLocation = ?, endLocation = ? WHERE emailId = ?",(date,time,'Y' if canDrive else 'N',startLocation,endLocation,emailId))
     databaseConnection.commit()
     databaseConnection.close()
     return
@@ -274,13 +275,14 @@ def fetchAllUHaulRequests(dayRange, date, emailId):
     databaseConnection = sqlite3.connect(databaseLocation)
     databaseCursor = databaseConnection.cursor()
     lowerLimitDate, upperLimitDate = getDayFrame(date, dayRange)
-    requestData = databaseCursor.execute("SELECT requestId,date,time,startLocation,endLocation,canDrive,emailId FROM uHaulRequests WHERE emailId != ? date BETWEEN ? AND ?", (emailId,lowerLimitDate, upperLimitDate)).fetchall()
+    print(lowerLimitDate, upperLimitDate)
+    requestData = databaseCursor.execute("SELECT requestId,requestDate,time,startLocation,endLocation,canDrive,emailId FROM uHaulRequests WHERE emailId != ? AND requestDate BETWEEN ? AND ?", (emailId,lowerLimitDate, upperLimitDate)).fetchall()
     allUHaulRequests = []
     for request in requestData:
         userDetails = databaseCursor.execute("SELECT countryCode,phoneNo,name FROM users WHERE emailId = ?", (request[6],)).fetchone()
         requestDict = {
             "requestId": str(request[0]),
-            "date": request[1],
+            "date": (datetime.strptime(request[1], '%Y-%m-%d')).strftime('%d-%m-%Y'),
             "time": request[2],
             "startLocation": request[3],
             "endLocation": request[4],
@@ -292,7 +294,7 @@ def fetchAllUHaulRequests(dayRange, date, emailId):
     databaseConnection.close()
     return allUHaulRequests
 
-def fetchMyUHaulOffers():
+def fetchMyUHaulOffers(emailId):
     databaseConnection = sqlite3.connect(databaseLocation)
     databaseCursor = databaseConnection.cursor()
     uHauRequestDetails = databaseCursor.execute("SELECT * FROM uHaulRequests WHERE emailId = ?", (emailId,)).fetchone()
