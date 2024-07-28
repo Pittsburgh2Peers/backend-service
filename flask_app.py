@@ -256,7 +256,7 @@ def getAllUHaulRequests():
         if userTokenValid(emailId, token):
             date = requestBody.get("date")
             dayRangeStr = requestBody.get("dayRange")
-            timeRange = 2 if not dayRangeStr else int(dayRangeStr)
+            dayRange = 2 if not dayRangeStr else int(dayRangeStr)
             uHaulRequests = fetchAllUHaulRequests(dayRange, date, emailId)
             return formatResponse(True, {"data": uHaulRequests})
         else:
