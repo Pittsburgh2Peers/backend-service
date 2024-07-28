@@ -13,7 +13,7 @@ successResponse = {
 
 def addHeaders(response):
     response.headers.add('Access-Control-Allow-Methods','*')
-    response.headers.add('Access-Control-Expose-Headers',"*")
+    response.headers.add('Access-Control-Expose-Headers','*')
     response.headers.add('Access-Control-Allow-Headers', '*')
     response.headers.add('Access-Control-Allow-Origin', 'https://pittsburgh2peers.vercel.app')
     response.headers.add('Content-Type', '*')
@@ -43,7 +43,7 @@ def getTimeFrame(time, timeRange):
         behindTime = datetime.combine(date.today(), datetime.strptime(time, '%H:%M').time()) - timedelta(hours=timeRange)
         aheadTime = datetime.combine(date.today(), datetime.strptime(time, '%H:%M').time()) + timedelta(hours=timeRange)
         today = datetime.today()
-    
+
         lowerLimitTime = "00:00" if behindTime.date() < today.date() else behindTime.strftime('%H:%M')
         upperLimitTime = "23:59" if aheadTime.date() > today.date() else aheadTime.strftime('%H:%M')
         return lowerLimitTime, upperLimitTime

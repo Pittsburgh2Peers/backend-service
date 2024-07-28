@@ -9,6 +9,8 @@ import re
 import logging
 app = Flask(__name__)
 
+logger = logging.getLogger(__name__)
+
 CORS(app)
 
 @app.route("/registrationSuccess", methods=["POST", "PUT"])
@@ -27,7 +29,7 @@ def registrationSuccess():
     except Exception as e:
         logger.error("Exception ==>"+ str(e))
         return formatResponse(False, errorMessage=e)
-    
+
 @app.route("/generateToken", methods=["POST"])
 def generateToken():
     try:
@@ -39,7 +41,7 @@ def generateToken():
     except Exception as e:
         logger.error("Exception ==>"+ str(e))
         return formatResponse(False, errorMessage=str(e))
-    
+
 @app.route("/userProfileComplete", methods=["POST"])
 def userProfileComplete():
     try:
@@ -55,16 +57,7 @@ def userProfileComplete():
     except Exception as e:
         logger.error("Exception ==>"+ str(e))
         return formatResponse(False, errorMessage=e)
-    
-@app.route("/deleteAllUsers")
-def deleteAllUsers():
-    try:
-        deleteAllUsersFromDb()
-        return formatResponse(True)
-    except Exception as e:
-        logger.error("Exception ==>"+ str(e))
-        return formatResponse(False, errorMessage=e)
-    
+
 @app.route("/updateUserProfile", methods=["POST", "PUT"])
 def updateUserProfile():
     try:
@@ -116,7 +109,7 @@ def carPoolRequest():
     except Exception as e:
         logger.error("Exception ==>"+ str(e))
         return formatResponse(False, errorMessage=e)
-            
+
 @app.route("/getAllCarPoolRequests", methods=["POST"])
 def getAllCarPoolRequests():
     try:
@@ -128,7 +121,7 @@ def getAllCarPoolRequests():
             endLocation = requestBody.get("endLocation")
             time = requestBody.get("time")
             timeRangeStr = requestBody.get("timeRange")
-            timeRange = 1 if not timeRangeStr else int(timeRangeStr)
+            timeRange = 1 if timeRangeStr == None else int(timeRangeStr)
             date = requestBody.get("date")
             carPoolRequests = fetchAllCarPoolRequests(startLocation,endLocation,time, timeRange, date, emailId)
             return formatResponse(True, {"data": carPoolRequests})
@@ -204,13 +197,13 @@ def getUserProfileDetails():
     except Exception as e:
         logger.error("Exception ==>"+ str(e))
         return formatResponse(False, errorMessage=e)
-    
+
 @app.route("/adminDashboard")
 def adminDashboard():
     # get all users and count
     userData = getAllUsers()
     carPoolData = getCarPoolRequests()
-    return render_template("adminDashboard.html", userData=userData, userCount = len(userData), carPoolData = carPoolData, carPoolCount = len(carPoolData))
+    return render_template("adminDashboard.html", userCount = len(userData), carPoolCount = len(carPoolData))
 
 if __name__ == "__main__":
     app.run(debug=True)

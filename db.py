@@ -14,7 +14,7 @@ def createUser(name, emailId, profileImage, countryCode, phoneNo, userToken, tok
     databaseConnection.commit()
     databaseConnection.close()
     return
-    
+
 def getToken(emailId):
     databaseConnection = sqlite3.connect(databaseLocation)
     databaseCursor = databaseConnection.cursor()
@@ -64,7 +64,7 @@ def isProfileComplete(emailId):
             return False
     else:
         raise Exception("User does not exist with emailId: " + emailId)
-    
+
 def deleteAllUsersFromDb():
     databaseConnection = sqlite3.connect(databaseLocation)
     databaseCursor = databaseConnection.cursor()
@@ -108,7 +108,7 @@ def carPoolRequestExists(emailId):
     else:
         databaseConnection.close()
         return False
-    
+
 def fetchAllCarPoolRequests(startLocation, endLocation, time, timeRange, date, emailId):
     databaseConnection = sqlite3.connect(databaseLocation)
     databaseCursor = databaseConnection.cursor()
@@ -131,13 +131,13 @@ def fetchAllCarPoolRequests(startLocation, endLocation, time, timeRange, date, e
             "noOfTrolleys": request[5],
             "startLocation": request[6],
             "endLocation": request[7],
-            "phoneNo": userDetails[0] + userDetails[1],
+            "phoneNo": ("" if userDetails[0] == None else userDetails[0]) + ("" if userDetails[1] == None else userDetails[1]),
             "name" : userDetails[2]
         }
         allCarPoolRequests.append(requestDict)
     databaseConnection.close()
     return allCarPoolRequests
-    
+
 def offerCarPoolRequest(emailId, carPoolId, carType):
     databaseConnection = sqlite3.connect(databaseLocation)
     databaseCursor = databaseConnection.cursor()
@@ -167,7 +167,7 @@ def offerCarPoolRequest(emailId, carPoolId, carType):
     else:
         databaseConnection.close()
         return CAR_POOL_REQUEST_NOT_FOUND_ERROR_CODE
-    
+
 def fetchMyCarPoolOffers(emailId):
     databaseConnection = sqlite3.connect(databaseLocation)
     databaseCursor = databaseConnection.cursor()
@@ -196,7 +196,7 @@ def fetchMyCarPoolOffers(emailId):
             "endLocation": carPoolRequestDetails[7]
         }
         return True, offers, pendingRequestDetails
-    
+
 def fetchUserDetails(emailId):
     databaseConnection = sqlite3.connect(databaseLocation)
     databaseCursor = databaseConnection.cursor()
@@ -214,7 +214,7 @@ def fetchUserDetails(emailId):
             "phoneNo": userDetails[4],
             "countryCode": userDetails[5]
         }
-        
+
 def getAllUsers():
     databaseConnection = sqlite3.connect(databaseLocation)
     databaseCursor = databaseConnection.cursor()
