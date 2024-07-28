@@ -2,7 +2,7 @@ from flask import Flask, request, render_template
 from flask_cors import CORS
 from uuid import uuid4
 from datetime import timedelta, date
-from db import createUser, getToken, isProfileComplete, userTokenValid, deleteAllUsersFromDb, updateUserProfileDetails, makeCarPoolRequest, carPoolRequestExists, fetchAllCarPoolRequests, offerCarPoolRequest, fetchMyCarPoolOffers, fetchUserDetails, getAllUsers, getCarPoolRequests, fetchUserFlags, uHualRequestExists, makeUHualRequest, fetchAllUHualRequests, fetchMyUHualOffers
+from db import createUser, getToken, isProfileComplete, userTokenValid, deleteAllUsersFromDb, updateUserProfileDetails, makeCarPoolRequest, carPoolRequestExists, fetchAllCarPoolRequests, offerCarPoolRequest, fetchMyCarPoolOffers, fetchUserDetails, getAllUsers, getCarPoolRequests, fetchUserFlags, uHaulRequestExists, makeUHaulRequest, fetchAllUHaulRequests, fetchMyUHaulOffers
 from common import formatResponse, createToken
 from constants import TOKEN_INVALID_ERROR_CODE, TOKEN_INVALID_ERROR_MESSAGE, CAR_POOL_REQUEST_EXISTS_ERROR_CODE, CAR_POOL_REQUEST_EXISTS_ERROR_MESSAGE, CAR_POOL_OFFER_MADE_TO_SELF_ERROR_CODE, CAR_POOL_OFFER_MADE_TO_SELF_ERROR_MESSAGE, CAR_POOL_REQUEST_NOT_FOUND_ERROR_CODE, CAR_POOL_REQUEST_NOT_FOUND_ERROR_MESSAGE, CAR_POOL_OFFER_ALREADY_EXISTS_ERROR_CODE, CAR_POOL_OFFER_ALREADY_EXISTS_ERROR_MESSAGE, USER_NOT_FOUND_ERROR_CODE, USER_NOT_FOUND_ERROR_MESSAGE, U_HAUL_REQUEST_NOT_FOUND_ERROR_CODE, U_HAUL_REQUEST_NOT_FOUND_ERROR_MESSAGE
 import re
@@ -235,11 +235,11 @@ def uHaulRequest():
             canDrive = requestBody.get("canDrive")
             startLocation = requestBody.get("startLocation")
             endLocation = requestBody.get("endLocation")
-            if not uHualRequestExists(emailId):
-                makeUHualRequest(emailId,date,time,canDrive,startLocation,endLocation, True)
+            if not uHaulRequestExists(emailId):
+                makeUHaulRequest(emailId,date,time,canDrive,startLocation,endLocation, True)
                 return formatResponse(True)
             else:
-                makeUHualRequest(emailId,date,time,canDrive,startLocation,endLocation, False)
+                makeUHaulRequest(emailId,date,time,canDrive,startLocation,endLocation, False)
                 return formatResponse(True)
         else:
             return formatResponse(True,errorCode=TOKEN_INVALID_ERROR_CODE, errorMessage=TOKEN_INVALID_ERROR_MESSAGE)
@@ -247,8 +247,8 @@ def uHaulRequest():
         logger.error("Exception ==>"+ str(e))
         return formatResponse(False, errorMessage=e)
 
-@app.route("/getAllUHualRequests", methods=["POST"])
-def getAllUHualRequests():
+@app.route("/getAllUHaulRequests", methods=["POST"])
+def getAllUHaulRequests():
     try:
         requestBody = request.get_json()
         emailId = requestBody.get("email")
@@ -257,7 +257,7 @@ def getAllUHualRequests():
             date = requestBody.get("date")
             dayRangeStr = requestBody.get("dayRange")
             timeRange = 2 if not dayRangeStr else int(dayRangeStr)
-            uHaulRequests = fetchAllUHualRequests(dayRange, date, emailId)
+            uHaulRequests = fetchAllUHaulRequests(dayRange, date, emailId)
             return formatResponse(True, {"data": uHaulRequests})
         else:
             return formatResponse(True,errorCode=TOKEN_INVALID_ERROR_CODE, errorMessage=TOKEN_INVALID_ERROR_MESSAGE)
@@ -265,14 +265,14 @@ def getAllUHualRequests():
         logger.error("Exception ==>"+ str(e))
         return formatResponse(False, errorMessage=e)
     
-@app.route("/getMyUHualOffers", methods=["POST"])
-def getMyUHualOffers():
+@app.route("/getMyUHaulOffers", methods=["POST"])
+def getMyUHaulOffers():
     try:
         requestBody = request.get_json()
         emailId = requestBody.get("email")
         token = requestBody.get("token")
         if userTokenValid(emailId, token):
-            uHaulRequestFound, uHaulOffers, pendingRequestDetails = fetchMyUHualOffers(emailId)
+            uHaulRequestFound, uHaulOffers, pendingRequestDetails = fetchMyUHaulOffers(emailId)
             if uHaulRequestFound:
                 return formatResponse(True, {"offers": uHaulOffers, "pendingRequestDetails": pendingRequestDetails })
             else:

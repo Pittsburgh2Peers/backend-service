@@ -243,10 +243,10 @@ def getCarPoolRequests():
     databaseConnection.close()
     return requests
 
-def uHualRequestExists(emailId):
+def uHaulRequestExists(emailId):
     databaseConnection = sqlite3.connect(databaseLocation)
     databaseCursor = databaseConnection.cursor()
-    userData = databaseCursor.execute("SELECT * FROM uHualRequests WHERE emailId = ?",(emailId,)).fetchone()
+    userData = databaseCursor.execute("SELECT * FROM uHaulRequests WHERE emailId = ?",(emailId,)).fetchone()
     databaseConnection.close()
     return True if userData is not None else False
     
@@ -254,28 +254,28 @@ def fetchUserFlags(emailId):
     databaseConnection = sqlite3.connect(databaseLocation)
     databaseCursor = databaseConnection.cursor()
     carPoolExists  = carPoolRequestExists(emailId)
-    uHualExists = uHualRequestExists(emailId)
+    uHaulExists = uHaulRequestExists(emailId)
     databaseConnection.close()
-    return {"carPoolRequested" : carPoolExists, "uHualRequested": uHualExists}
+    return {"carPoolRequested" : carPoolExists, "uHaulRequested": uHaulExists}
 
-def makeUHualRequest(emailId,date,time,canDrive,startLocation,endLocation, newRequest):
+def makeUHaulRequest(emailId,date,time,canDrive,startLocation,endLocation, newRequest):
     time = (datetime.strptime(time, '%H:%M').time()).strftime('%H:%M')
     databaseConnection = sqlite3.connect(databaseLocation)
     databaseCursor = databaseConnection.cursor()
     if newRequest:
-        databaseCursor.execute("INSERT INTO uHualRequests(emailId,date,time,canDrive,startLocation,endLocation) VALUES(?,?,?,?,?,?)",(emailId,date,time,'Y' if canDrive else 'N',startLocation,endLocation))
+        databaseCursor.execute("INSERT INTO uHaulRequests(emailId,date,time,canDrive,startLocation,endLocation) VALUES(?,?,?,?,?,?)",(emailId,date,time,'Y' if canDrive else 'N',startLocation,endLocation))
     else:
         databaseCursor.execute("UPDATE carPoolRequests SET date = ?, time = ?, canDrive = ?, startLocation = ?, endLocation = ? WHERE emailId = ?",(date,time,'Y' if canDrive else 'N',startLocation,endLocation,emailId))
     databaseConnection.commit()
     databaseConnection.close()
     return
 
-def fetchAllUHualRequests(dayRange, date, emailId):
+def fetchAllUHaulRequests(dayRange, date, emailId):
     databaseConnection = sqlite3.connect(databaseLocation)
     databaseCursor = databaseConnection.cursor()
     lowerLimitDate, upperLimitDate = getDayFrame(date, dayRange)
-    requestData = databaseCursor.execute("SELECT requestId,date,time,startLocation,endLocation,canDrive,emailId FROM uHualRequests WHERE emailId != ? date BETWEEN ? AND ?", (emailId,lowerLimitDate, upperLimitDate)).fetchall()
-    allUHualRequests = []
+    requestData = databaseCursor.execute("SELECT requestId,date,time,startLocation,endLocation,canDrive,emailId FROM uHaulRequests WHERE emailId != ? date BETWEEN ? AND ?", (emailId,lowerLimitDate, upperLimitDate)).fetchall()
+    allUHaulRequests = []
     for request in requestData:
         userDetails = databaseCursor.execute("SELECT countryCode,phoneNo,name FROM users WHERE emailId = ?", (request[6],)).fetchone()
         requestDict = {
@@ -288,26 +288,26 @@ def fetchAllUHualRequests(dayRange, date, emailId):
             "phoneNo": userDetails[0] + userDetails[1],
             "name" : userDetails[2]
         }
-        allUHualRequests.append(requestDict)
+        allUHaulRequests.append(requestDict)
     databaseConnection.close()
-    return allUHualRequests
+    return allUHaulRequests
 
-def fetchMyUHualOffers():
+def fetchMyUHaulOffers():
     databaseConnection = sqlite3.connect(databaseLocation)
     databaseCursor = databaseConnection.cursor()
-    uHualRequestDetails = databaseCursor.execute("SELECT * FROM uHualRequests WHERE emailId = ?", (emailId,)).fetchone()
-    if uHualRequestDetails is None:
+    uHauRequestDetails = databaseCursor.execute("SELECT * FROM uHaulRequests WHERE emailId = ?", (emailId,)).fetchone()
+    if uHauRequestDetails is None:
         databaseConnection.close()
         return False, None, None
     else:
         offers = []
         databaseConnection.close()
         pendingRequestDetails = {
-            "requestId": str(uHualRequestDetails[0]),
-            "date": uHualRequestDetails[2],
-            "time": uHualRequestDetails[3],
-            "startLocation": uHualRequestDetails[5],
-            "endLocation": uHualRequestDetails[6],
-            "personWillingToDrive”": True if uHualRequestDetails[4] == 'Y' else False
+            "requestId": str(uHauRequestDetails[0]),
+            "date": uHauRequestDetails[2],
+            "time": uHauRequestDetails[3],
+            "startLocation": uHauRequestDetails[5],
+            "endLocation": uHauRequestDetails[6],
+            "personWillingToDrive”": True if uHauRequestDetails[4] == 'Y' else False
         }
         return True, offers, pendingRequestDetails
