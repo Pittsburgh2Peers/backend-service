@@ -223,7 +223,7 @@ def getFlags():
         logger.error("Exception ==>"+ str(e))
         return formatResponse(False, errorMessage=e)
 
-@app.route("/uHaulRequest", methods=["POST"])
+@app.route("/uHaulRequest", methods=["POST","PUT"])
 def uHaulRequest():
     try:
         requestBody = request.get_json()

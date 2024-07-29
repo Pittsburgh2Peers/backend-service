@@ -255,8 +255,22 @@ def fetchUserFlags(emailId):
     databaseCursor = databaseConnection.cursor()
     carPoolExists  = carPoolRequestExists(emailId)
     uHaulExists = uHaulRequestExists(emailId)
+    betaUserFlag = isBetaUser(emailId)
     databaseConnection.close()
-    return {"carPoolRequested" : carPoolExists, "uHaulRequested": uHaulExists}
+    return {"carPoolRequested" : carPoolExists, "uHaulRequested": uHaulExists, "isBeta": betaUserFlag}
+
+def isBetaUser(emailId):
+    try:
+        databaseConnection = sqlite3.connect(databaseLocation)
+        databaseCursor = databaseConnection.cursor()
+        betaUserFlag = databaseCursor.execute("SELECT betaUser FROM users WHERE emailId = ?",(emailId,)).fetchone()
+        databaseConnection.close()
+        if betaUserFlag:
+            return True if betaUserFlag[0] == 'Y' else False
+        else:
+            return False
+    except Exception as e:
+        print(e)
 
 def makeUHaulRequest(emailId,date,time,canDrive,startLocation,endLocation, newRequest):
     time = (datetime.strptime(time, '%H:%M').time()).strftime('%H:%M')
