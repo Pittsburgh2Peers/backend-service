@@ -317,3 +317,10 @@ def fetchMyUHaulOffers(emailId):
             "personWillingToDrive”": True if uHauRequestDetails[4] == 'Y' else False
         }
         return True, offers, pendingRequestDetails
+    
+def getUHaulRequests():
+    databaseConnection = sqlite3.connect(databaseLocation)
+    databaseCursor = databaseConnection.cursor()
+    allUHaulRequests = databaseCursor.execute("SELECT * FROM uHaulRequests").fetchall()
+    databaseConnection.close()
+    return allUHaulRequests
