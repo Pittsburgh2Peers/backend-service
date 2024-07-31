@@ -9,60 +9,7 @@
 
 <body>
     <h2>UserCount: {{userCount}}</h2>
-    <table border="1">
-        <tr>
-            <th>
-                Name
-            </th>
-        </tr>
-        {% for user in userData %}
-        <tr>
-            <td>
-                {{user[0]}}
-            </td>
-        </tr>
-        {% endfor %}
-    </table>
     <h2>CarPool Count: {{carPoolCount}}</h2>
-    <table border="1">
-        <tr>
-            <th>
-                Name
-            </th>
-            <th>
-                Date
-            </th>
-            <th>
-                Time
-            </th>
-            <th>
-                Start Location
-            </th>
-            <th>
-                End Location
-            </th>
-        </tr>
-        {% for carPool in carPoolData %}
-        <tr>
-            <td>
-                {{carPool[0]}}
-            </td>
-            <td>
-                {{carPool[1]}}
-            </td>
-            <td>
-                {{carPool[2]}}
-            </td>
-            <td>
-                {{carPool[3]}}
-            </td>
-            <td>
-                {{carPool[4]}}
-            </td>
-        </tr>
-        {% endfor %}
-    </table>
-
 </body>
 
 </html>
