@@ -2,7 +2,7 @@ from flask import Flask, request, render_template
 from flask_cors import CORS
 from uuid import uuid4
 from datetime import timedelta, date
-from db import createUser, getToken, isProfileComplete, userTokenValid, updateUserProfileDetails, makeCarPoolRequest, carPoolRequestExists, fetchAllCarPoolRequests, offerCarPoolRequest, fetchMyCarPoolOffers, fetchUserDetails, getAllUsers, getCarPoolRequests, fetchUserFlags, uHaulRequestExists, makeUHaulRequest, fetchAllUHaulRequests, fetchMyUHaulOffers
+from db import createUser, getToken, isProfileComplete, userTokenValid, updateUserProfileDetails, makeCarPoolRequest, carPoolRequestExists, fetchAllCarPoolRequests, offerCarPoolRequest, fetchMyCarPoolOffers, fetchUserDetails, getAllUsers, getCarPoolRequests, fetchUserFlags, uHaulRequestExists, makeUHaulRequest, fetchAllUHaulRequests, fetchMyUHaulOffers, getUHaulRequests
 from common import formatResponse, createToken
 from constants import TOKEN_INVALID_ERROR_CODE, TOKEN_INVALID_ERROR_MESSAGE, CAR_POOL_REQUEST_EXISTS_ERROR_CODE, CAR_POOL_REQUEST_EXISTS_ERROR_MESSAGE, CAR_POOL_OFFER_MADE_TO_SELF_ERROR_CODE, CAR_POOL_OFFER_MADE_TO_SELF_ERROR_MESSAGE, CAR_POOL_REQUEST_NOT_FOUND_ERROR_CODE, CAR_POOL_REQUEST_NOT_FOUND_ERROR_MESSAGE, CAR_POOL_OFFER_ALREADY_EXISTS_ERROR_CODE, CAR_POOL_OFFER_ALREADY_EXISTS_ERROR_MESSAGE, USER_NOT_FOUND_ERROR_CODE, USER_NOT_FOUND_ERROR_MESSAGE, U_HAUL_REQUEST_NOT_FOUND_ERROR_CODE, U_HAUL_REQUEST_NOT_FOUND_ERROR_MESSAGE
 import re
@@ -194,10 +194,10 @@ def getUserProfileDetails():
 
 @app.route("/adminDashboard")
 def adminDashboard():
-    # get all users and count
     userData = getAllUsers()
     carPoolData = getCarPoolRequests()
-    return render_template("adminDashboard.html", userCount = len(userData), carPoolCount = len(carPoolData))
+    uHaulData = getUHaulRequests()
+    return render_template("adminDashboard.html", userCount = len(userData), carPoolCount = len(carPoolData), uHaulCount = len(uHaulData))
 
 @app.route("/getFlags", methods=["POST"])
 def getFlags():
