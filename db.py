@@ -14,7 +14,7 @@ def createUser(name, emailId, profileImage, countryCode, phoneNo, userToken, tok
     databaseConnection.commit()
     databaseConnection.close()
     return
-    
+
 def getToken(emailId):
     databaseConnection = sqlite3.connect(databaseLocation)
     databaseCursor = databaseConnection.cursor()
@@ -64,14 +64,6 @@ def isProfileComplete(emailId):
             return False
     else:
         raise Exception("User does not exist with emailId: " + emailId)
-    
-def deleteAllUsersFromDb():
-    databaseConnection = sqlite3.connect(databaseLocation)
-    databaseCursor = databaseConnection.cursor()
-    databaseCursor.execute("DELETE FROM users")
-    databaseConnection.commit()
-    databaseConnection.close()
-    return
 
 def updateUserProfileDetails(emailId,name,phoneNo,countryCode):
     databaseConnection = sqlite3.connect(databaseLocation)
@@ -127,13 +119,13 @@ def fetchAllCarPoolRequests(startLocation, endLocation, time, timeRange, date, e
             "noOfTrolleys": request[5],
             "startLocation": request[6],
             "endLocation": request[7],
-            "phoneNo": userDetails[0] + userDetails[1],
+            "phoneNo": ("" if userDetails[0] == None else userDetails[0]) + ("" if userDetails[1] == None else userDetails[1]),
             "name" : userDetails[2]
         }
         allCarPoolRequests.append(requestDict)
     databaseConnection.close()
     return allCarPoolRequests
-    
+
 def offerCarPoolRequest(emailId, carPoolId, carType):
     databaseConnection = sqlite3.connect(databaseLocation)
     databaseCursor = databaseConnection.cursor()
@@ -163,7 +155,7 @@ def offerCarPoolRequest(emailId, carPoolId, carType):
     else:
         databaseConnection.close()
         return CAR_POOL_REQUEST_NOT_FOUND_ERROR_CODE
-    
+
 def fetchMyCarPoolOffers(emailId):
     databaseConnection = sqlite3.connect(databaseLocation)
     databaseCursor = databaseConnection.cursor()
@@ -192,7 +184,7 @@ def fetchMyCarPoolOffers(emailId):
             "endLocation": carPoolRequestDetails[7]
         }
         return True, offers, pendingRequestDetails
-    
+
 def fetchUserDetails(emailId):
     databaseConnection = sqlite3.connect(databaseLocation)
     databaseCursor = databaseConnection.cursor()
@@ -210,7 +202,7 @@ def fetchUserDetails(emailId):
             "phoneNo": userDetails[4],
             "countryCode": userDetails[5]
         }
-        
+
 def getAllUsers():
     databaseConnection = sqlite3.connect(databaseLocation)
     databaseCursor = databaseConnection.cursor()
@@ -251,12 +243,10 @@ def uHaulRequestExists(emailId):
     return True if userData is not None else False
     
 def fetchUserFlags(emailId):
-    databaseConnection = sqlite3.connect(databaseLocation)
-    databaseCursor = databaseConnection.cursor()
     carPoolExists  = carPoolRequestExists(emailId)
     uHaulExists = uHaulRequestExists(emailId)
     betaUserFlag = isBetaUser(emailId)
-    databaseConnection.close()
+    uHaulEnabledForAllFlag = False
     return {"carPoolRequested" : carPoolExists, "uHaulRequested": uHaulExists, "isBeta": betaUserFlag}
 
 def isBetaUser(emailId):
@@ -300,7 +290,7 @@ def fetchAllUHaulRequests(dayRange, date, emailId):
             "time": request[2],
             "startLocation": request[3],
             "endLocation": request[4],
-            "personWillingtoDrive”": True if request[5] == 'Y' else False,
+            "personWillingToDrive": True if request[5] == 'Y' else False,
             "phoneNo": userDetails[0] + userDetails[1],
             "name" : userDetails[2]
         }
@@ -320,7 +310,7 @@ def fetchMyUHaulOffers(emailId):
         databaseConnection.close()
         pendingRequestDetails = {
             "requestId": str(uHauRequestDetails[0]),
-            "date": uHauRequestDetails[2],
+            "date": (datetime.strptime(uHauRequestDetails[2], '%Y-%m-%d')).strftime('%d-%m-%Y'),
             "time": uHauRequestDetails[3],
             "startLocation": uHauRequestDetails[5],
             "endLocation": uHauRequestDetails[6],

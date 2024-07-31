@@ -2,7 +2,7 @@ from flask import Flask, request, render_template
 from flask_cors import CORS
 from uuid import uuid4
 from datetime import timedelta, date
-from db import createUser, getToken, isProfileComplete, userTokenValid, deleteAllUsersFromDb, updateUserProfileDetails, makeCarPoolRequest, carPoolRequestExists, fetchAllCarPoolRequests, offerCarPoolRequest, fetchMyCarPoolOffers, fetchUserDetails, getAllUsers, getCarPoolRequests, fetchUserFlags, uHaulRequestExists, makeUHaulRequest, fetchAllUHaulRequests, fetchMyUHaulOffers
+from db import createUser, getToken, isProfileComplete, userTokenValid, updateUserProfileDetails, makeCarPoolRequest, carPoolRequestExists, fetchAllCarPoolRequests, offerCarPoolRequest, fetchMyCarPoolOffers, fetchUserDetails, getAllUsers, getCarPoolRequests, fetchUserFlags, uHaulRequestExists, makeUHaulRequest, fetchAllUHaulRequests, fetchMyUHaulOffers
 from common import formatResponse, createToken
 from constants import TOKEN_INVALID_ERROR_CODE, TOKEN_INVALID_ERROR_MESSAGE, CAR_POOL_REQUEST_EXISTS_ERROR_CODE, CAR_POOL_REQUEST_EXISTS_ERROR_MESSAGE, CAR_POOL_OFFER_MADE_TO_SELF_ERROR_CODE, CAR_POOL_OFFER_MADE_TO_SELF_ERROR_MESSAGE, CAR_POOL_REQUEST_NOT_FOUND_ERROR_CODE, CAR_POOL_REQUEST_NOT_FOUND_ERROR_MESSAGE, CAR_POOL_OFFER_ALREADY_EXISTS_ERROR_CODE, CAR_POOL_OFFER_ALREADY_EXISTS_ERROR_MESSAGE, USER_NOT_FOUND_ERROR_CODE, USER_NOT_FOUND_ERROR_MESSAGE, U_HAUL_REQUEST_NOT_FOUND_ERROR_CODE, U_HAUL_REQUEST_NOT_FOUND_ERROR_MESSAGE
 import re
@@ -54,15 +54,6 @@ def userProfileComplete():
             return formatResponse(True, data)
         else:
             return formatResponse(True,errorCode=TOKEN_INVALID_ERROR_CODE, errorMessage=TOKEN_INVALID_ERROR_MESSAGE)
-    except Exception as e:
-        logger.error("Exception ==>"+ str(e))
-        return formatResponse(False, errorMessage=e)
-    
-@app.route("/deleteAllUsers")
-def deleteAllUsers():
-    try:
-        deleteAllUsersFromDb()
-        return formatResponse(True)
     except Exception as e:
         logger.error("Exception ==>"+ str(e))
         return formatResponse(False, errorMessage=e)
@@ -124,7 +115,7 @@ def getAllCarPoolRequests():
             endLocation = requestBody.get("endLocation")
             time = requestBody.get("time")
             timeRangeStr = requestBody.get("timeRange")
-            timeRange = 1 if not timeRangeStr else int(timeRangeStr)
+            timeRange = 3 if timeRangeStr == None else int(timeRangeStr)
             date = requestBody.get("date")
             carPoolRequests = fetchAllCarPoolRequests(startLocation,endLocation,time, timeRange, date, emailId)
             return formatResponse(True, {"data": carPoolRequests})
@@ -206,7 +197,7 @@ def adminDashboard():
     # get all users and count
     userData = getAllUsers()
     carPoolData = getCarPoolRequests()
-    return render_template("adminDashboard.html", userData=userData, userCount = len(userData), carPoolData = carPoolData, carPoolCount = len(carPoolData))
+    return render_template("adminDashboard.html", userCount = len(userData), carPoolCount = len(carPoolData))
 
 @app.route("/getFlags", methods=["POST"])
 def getFlags():
