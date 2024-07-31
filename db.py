@@ -1,6 +1,6 @@
 import sqlite3
 import os
-from common import createToken, isTokenValid, getTimeFrame
+from common import createToken, isTokenValid, getTimeFrame, getDayFrame
 from constants import CAR_POOL_REQUEST_NOT_FOUND_ERROR_CODE, CAR_POOL_OFFER_MADE_TO_SELF_ERROR_CODE, CAR_POOL_OFFER_ALREADY_EXISTS_ERROR_CODE
 from datetime import datetime
 
@@ -65,14 +65,6 @@ def isProfileComplete(emailId):
     else:
         raise Exception("User does not exist with emailId: " + emailId)
 
-def deleteAllUsersFromDb():
-    databaseConnection = sqlite3.connect(databaseLocation)
-    databaseCursor = databaseConnection.cursor()
-    databaseCursor.execute("DELETE FROM users")
-    databaseConnection.commit()
-    databaseConnection.close()
-    return
-
 def updateUserProfileDetails(emailId,name,phoneNo,countryCode):
     databaseConnection = sqlite3.connect(databaseLocation)
     databaseCursor = databaseConnection.cursor()
@@ -102,12 +94,8 @@ def carPoolRequestExists(emailId):
     databaseConnection = sqlite3.connect(databaseLocation)
     databaseCursor = databaseConnection.cursor()
     userData = databaseCursor.execute("SELECT * FROM carPoolRequests WHERE emailId = ?",(emailId,)).fetchone()
-    if userData is not None:
-        databaseConnection.close()
-        return True
-    else:
-        databaseConnection.close()
-        return False
+    databaseConnection.close()
+    return True if userData is not None else False
 
 def fetchAllCarPoolRequests(startLocation, endLocation, time, timeRange, date, emailId):
     databaseConnection = sqlite3.connect(databaseLocation)
@@ -246,3 +234,86 @@ def getCarPoolRequests():
         ])
     databaseConnection.close()
     return requests
+
+def uHaulRequestExists(emailId):
+    databaseConnection = sqlite3.connect(databaseLocation)
+    databaseCursor = databaseConnection.cursor()
+    userData = databaseCursor.execute("SELECT * FROM uHaulRequests WHERE emailId = ?",(emailId,)).fetchone()
+    databaseConnection.close()
+    return True if userData is not None else False
+    
+def fetchUserFlags(emailId):
+    carPoolExists  = carPoolRequestExists(emailId)
+    uHaulExists = uHaulRequestExists(emailId)
+    betaUserFlag = isBetaUser(emailId)
+    uHaulEnabledForAllFlag = False
+    return {"carPoolRequested" : carPoolExists, "uHaulRequested": uHaulExists, "isBeta": betaUserFlag}
+
+def isBetaUser(emailId):
+    try:
+        databaseConnection = sqlite3.connect(databaseLocation)
+        databaseCursor = databaseConnection.cursor()
+        betaUserFlag = databaseCursor.execute("SELECT betaUser FROM users WHERE emailId = ?",(emailId,)).fetchone()
+        databaseConnection.close()
+        if betaUserFlag:
+            return True if betaUserFlag[0] == 'Y' else False
+        else:
+            return False
+    except Exception as e:
+        print(e)
+
+def makeUHaulRequest(emailId,date,time,canDrive,startLocation,endLocation, newRequest):
+    time = (datetime.strptime(time, '%H:%M').time()).strftime('%H:%M')
+    date = (datetime.strptime(date, '%d-%m-%Y').date()).strftime('%Y-%m-%d')
+    databaseConnection = sqlite3.connect(databaseLocation)
+    databaseCursor = databaseConnection.cursor()
+    if newRequest:
+        databaseCursor.execute("INSERT INTO uHaulRequests(emailId,requestDate,time,canDrive,startLocation,endLocation) VALUES(?,?,?,?,?,?)",(emailId,date,time,'Y' if canDrive else 'N',startLocation,endLocation))
+    else:
+        databaseCursor.execute("UPDATE uHaulRequests SET requestDate = ?, time = ?, canDrive = ?, startLocation = ?, endLocation = ? WHERE emailId = ?",(date,time,'Y' if canDrive else 'N',startLocation,endLocation,emailId))
+    databaseConnection.commit()
+    databaseConnection.close()
+    return
+
+def fetchAllUHaulRequests(dayRange, date, emailId):
+    databaseConnection = sqlite3.connect(databaseLocation)
+    databaseCursor = databaseConnection.cursor()
+    lowerLimitDate, upperLimitDate = getDayFrame(date, dayRange)
+    print(lowerLimitDate, upperLimitDate)
+    requestData = databaseCursor.execute("SELECT requestId,requestDate,time,startLocation,endLocation,canDrive,emailId FROM uHaulRequests WHERE emailId != ? AND requestDate BETWEEN ? AND ?", (emailId,lowerLimitDate, upperLimitDate)).fetchall()
+    allUHaulRequests = []
+    for request in requestData:
+        userDetails = databaseCursor.execute("SELECT countryCode,phoneNo,name FROM users WHERE emailId = ?", (request[6],)).fetchone()
+        requestDict = {
+            "requestId": str(request[0]),
+            "date": (datetime.strptime(request[1], '%Y-%m-%d')).strftime('%d-%m-%Y'),
+            "time": request[2],
+            "startLocation": request[3],
+            "endLocation": request[4],
+            "personWillingToDrive": True if request[5] == 'Y' else False,
+            "phoneNo": userDetails[0] + userDetails[1],
+            "name" : userDetails[2]
+        }
+        allUHaulRequests.append(requestDict)
+    databaseConnection.close()
+    return allUHaulRequests
+
+def fetchMyUHaulOffers(emailId):
+    databaseConnection = sqlite3.connect(databaseLocation)
+    databaseCursor = databaseConnection.cursor()
+    uHauRequestDetails = databaseCursor.execute("SELECT * FROM uHaulRequests WHERE emailId = ?", (emailId,)).fetchone()
+    if uHauRequestDetails is None:
+        databaseConnection.close()
+        return False, None, None
+    else:
+        offers = []
+        databaseConnection.close()
+        pendingRequestDetails = {
+            "requestId": str(uHauRequestDetails[0]),
+            "date": (datetime.strptime(uHauRequestDetails[2], '%Y-%m-%d')).strftime('%d-%m-%Y'),
+            "time": uHauRequestDetails[3],
+            "startLocation": uHauRequestDetails[5],
+            "endLocation": uHauRequestDetails[6],
+            "personWillingToDrive”": True if uHauRequestDetails[4] == 'Y' else False
+        }
+        return True, offers, pendingRequestDetails

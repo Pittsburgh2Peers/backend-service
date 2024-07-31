@@ -1,6 +1,9 @@
 from flask import jsonify
 from uuid import uuid4
 from datetime import timedelta, date, datetime
+import logging
+
+logger = logging.getLogger(__name__)
 
 errorResponse = {
   "errorCode": "1",
@@ -43,10 +46,20 @@ def getTimeFrame(time, timeRange):
         behindTime = datetime.combine(date.today(), datetime.strptime(time, '%H:%M').time()) - timedelta(hours=timeRange)
         aheadTime = datetime.combine(date.today(), datetime.strptime(time, '%H:%M').time()) + timedelta(hours=timeRange)
         today = datetime.today()
-
         lowerLimitTime = "00:00" if behindTime.date() < today.date() else behindTime.strftime('%H:%M')
         upperLimitTime = "23:59" if aheadTime.date() > today.date() else aheadTime.strftime('%H:%M')
         return lowerLimitTime, upperLimitTime
     except Exception as e:
         logger.error("Exception ==>"+ str(e))
         return "00:00", "23:59"
+
+def getDayFrame(date, dayRange):
+    try:
+        behindDate = datetime.strptime(date, "%d-%m-%Y") - timedelta(days=dayRange)
+        aheadDate = datetime.strptime(date, "%d-%m-%Y") + timedelta(days=dayRange)
+        lowerLimitDate = behindDate.strftime('%Y-%m-%d')
+        upperLimitDate = aheadDate.strftime('%Y-%m-%d')
+        return lowerLimitDate, upperLimitDate
+    except Exception as e:
+        logger.error("Exception ==>"+ str(e))
+        return "1900-01-01", "2100-01-01"
