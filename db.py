@@ -96,7 +96,7 @@ def carPoolRequestExists(emailId):
     userData = databaseCursor.execute("SELECT * FROM carPoolRequests WHERE emailId = ?",(emailId,)).fetchone()
     databaseConnection.close()
     return True if userData is not None else False
-    
+
 def fetchAllCarPoolRequests(startLocation, endLocation, time, timeRange, date, emailId):
     databaseConnection = sqlite3.connect(databaseLocation)
     databaseCursor = databaseConnection.cursor()

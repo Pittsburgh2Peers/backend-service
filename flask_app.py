@@ -29,7 +29,7 @@ def registrationSuccess():
     except Exception as e:
         logger.error("Exception ==>"+ str(e))
         return formatResponse(False, errorMessage=e)
-    
+
 @app.route("/generateToken", methods=["POST"])
 def generateToken():
     try:
@@ -41,7 +41,7 @@ def generateToken():
     except Exception as e:
         logger.error("Exception ==>"+ str(e))
         return formatResponse(False, errorMessage=str(e))
-    
+
 @app.route("/userProfileComplete", methods=["POST"])
 def userProfileComplete():
     try:
@@ -57,7 +57,7 @@ def userProfileComplete():
     except Exception as e:
         logger.error("Exception ==>"+ str(e))
         return formatResponse(False, errorMessage=e)
-    
+
 @app.route("/updateUserProfile", methods=["POST", "PUT"])
 def updateUserProfile():
     try:
@@ -103,7 +103,7 @@ def carPoolRequest():
     except Exception as e:
         logger.error("Exception ==>"+ str(e))
         return formatResponse(False, errorMessage=e)
-            
+
 @app.route("/getAllCarPoolRequests", methods=["POST"])
 def getAllCarPoolRequests():
     try:
@@ -191,7 +191,7 @@ def getUserProfileDetails():
     except Exception as e:
         logger.error("Exception ==>"+ str(e))
         return formatResponse(False, errorMessage=e)
-    
+
 @app.route("/adminDashboard")
 def adminDashboard():
     # get all users and count
