@@ -1,7 +1,7 @@
 import sqlite3
 import os
-from common import createToken, isTokenValid, getTimeFrame, getDayFrame
-from constants import CAR_POOL_REQUEST_NOT_FOUND_ERROR_CODE, CAR_POOL_OFFER_MADE_TO_SELF_ERROR_CODE, CAR_POOL_OFFER_ALREADY_EXISTS_ERROR_CODE
+from routes.common.utils import createToken, isTokenValid, getTimeFrame, getDayFrame
+from routes.common.constants import CAR_POOL_REQUEST_NOT_FOUND_ERROR_CODE, CAR_POOL_OFFER_MADE_TO_SELF_ERROR_CODE, CAR_POOL_OFFER_ALREADY_EXISTS_ERROR_CODE
 from datetime import datetime
 
 THIS_FOLDER = os.path.dirname(os.path.abspath(__file__))
@@ -314,7 +314,7 @@ def fetchMyUHaulOffers(emailId):
             "time": uHauRequestDetails[3],
             "startLocation": uHauRequestDetails[5],
             "endLocation": uHauRequestDetails[6],
-            "personWillingToDrive”": True if uHauRequestDetails[4] == 'Y' else False
+            "personWillingToDrive": True if uHauRequestDetails[4] == 'Y' else False
         }
         return True, offers, pendingRequestDetails
     
